@@ -1,0 +1,1 @@
+grep -E "^1[[:space:]]|^100[[:space:]]|^[[:space:]]$" apt.dat > apt_1_100.dat

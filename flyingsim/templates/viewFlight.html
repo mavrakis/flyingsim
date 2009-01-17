@@ -1,0 +1,839 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Flyingsim: The closest you will ever get to fly a passenger airliner</title>
+    <style type="text/css">
+	body {
+		background-color:#CBDEA8;
+		margin:5px;
+		padding:0px;
+	}
+
+    v\:* {
+      behavior:url(#default#VML);
+    }
+
+    #ad_horizontal {
+		width: 885px;
+		margin-top:10px;
+	}
+
+	#ad_vertical {
+		width: 150px;
+		margin-left:5px;
+	}
+	#ui {
+		width: 730px;
+	}
+
+
+
+
+.roundedcornr_box_640766 {
+   background: #b1ba8e;
+}
+.roundedcornr_top_640766 div {
+   background: url(../img/roundedcornr_640766_tl.png) no-repeat top left;
+}
+.roundedcornr_top_640766 {
+   background: url(../img/roundedcornr_640766_tr.png) no-repeat top right;
+}
+.roundedcornr_bottom_640766 div {
+   background: url(../img/roundedcornr_640766_bl.png) no-repeat bottom left;
+}
+.roundedcornr_bottom_640766 {
+   background: url(../img/roundedcornr_640766_br.png) no-repeat bottom right;
+}
+
+.roundedcornr_top_640766 div, .roundedcornr_top_640766,
+.roundedcornr_bottom_640766 div, .roundedcornr_bottom_640766 {
+   width: 100%;
+   height: 15px;
+   font-size: 1px;
+}
+.roundedcornr_content_640766 { margin: 0 15px; }
+
+    </style>
+
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"
+      type="text/javascript"></script>
+           <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"
+      type="text/javascript"></script>
+
+	    <!-- Must be loaded after google maps -->
+	    <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"
+      type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+
+    //<![CDATA[
+	var map ;
+	var airportManager;
+	var airportMarkers=[];
+	var planeManager;
+	var planeMarkers=[];
+	var planeOtherManager;
+	var planeOtherMarkers=[];
+	var planeOtherData=null;
+	var airwayManager;
+	var airwayMarkers=[];
+	var waypointManager;
+	var waypointMarkers=[];
+	var waypointIds=[];
+	var points=[];
+	var bTrackPlane=false;
+	var bApproachingAirport=false;
+	var bFlightCompletedClient=false;
+	var planeTargetPoint;
+	var indexWaypoint=0;
+
+	var possibleAirportManager;
+
+	var startDate;
+
+	var airwayColors=new Array("#FF0000", "#FFFF00", "#FF7777", "#77FF77","#0077FF","#11FF00","#11FF77","#11FF00");
+	var colorIndex=0;
+
+	var showMapBlowupOptions;
+
+
+
+    function load() {
+      //create dummy flash object needed for external callback
+      window.flyingsimUI = document.getElementById("flyingsimUI");
+
+	  //set focus to flash object
+	  try {
+	  	document.getElementById("flyingsimUI").focus();
+	  } catch (e){}
+
+      if (GBrowserIsCompatible()) {
+        map = new GMap2(document.getElementById("map"));
+        map.addControl(new GSmallMapControl());
+		map.addControl(new GMapTypeControl());
+
+        var centerPoint= new GLatLng(51.883333333333, 0.23333333333333);
+        map.setCenter(centerPoint,4);
+		map.setMapType(G_SATELLITE_MAP);
+		G_SATELLITE_MAP.getMinimumResolution = function () { return 1 };
+
+		map.openInfoWindowHtml(centerPoint,  "",  {maxContent:"Welcome to flyingsim.com<p>Please select follow the instructions on the top part of the screen in order to start a flight"});
+		//must be called asynch
+		setTimeout("map.getInfoWindow().maximize()",0);
+
+
+        airportManager = new MarkerManager(map );
+		planeManager = new MarkerManager(map,{trackMarkers:true});
+		airwayManager = new MarkerManager(map);
+		waypointManager= new MarkerManager(map);
+
+		planeOtherManager= new MarkerManager(map,{trackMarkers:true});
+
+		possibleAirportManager=new MarkerManager(map);
+
+
+
+		//externalSetFlightRoute("{'airportStart':{'arptID':'UK84007','icaoID':'EGGP','name':'LIVERPOOL','longitude':'-2.849722','latitude':'53.333611'},'airportEnd':{'arptID':'TU00002','icaoID':'LTFE','name':'MILAS BODRUM','longitude':'27.664311','latitude':'37.250611'},'airways':[{'name':'L975','startLatitude':'55.385556','endLatitude':'53.608056','startLongitude':'5','endLongitude':'-1.083333'},{'name':'UY70','startLatitude':'61.464594','endLatitude':'61.409911','startLongitude':'21.795858','endLongitude':'23.577661'},{'name':'UL603','startLatitude':'54.066867','endLatitude':'41.329444','startLongitude':'-4.763475','endLongitude':'22.791389'},{'name':'UL620','startLatitude':'51.848417','endLatitude':'34.483333','startLongitude':'1.147611','endLongitude':'35.05'},{'name':'UL618','startLatitude':'39.919539','endLatitude':'38.251667','startLongitude':'25.237189','endLongitude':'25.905556'}],'waypoints':[{'id':'STOCK','longitude':'-1.821111','latitude':'53.534722'},{'id':'OTR','longitude':'-0.103611','latitude':'53.698333'},{'id':'BLUFA','longitude':'3.165556','latitude':'52.9375'},{'id':'PAM','longitude':'5.092161','latitude':'52.334761'},{'id':'NARKA','longitude':'21.859933','latitude':'47.248461'},{'id':'MOKRU','longitude':'22.815306','latitude':'44.948169'},{'id':'OKESA','longitude':'27.386667','latitude':'37.613333'},{'id':'AKBUK','longitude':'27.507778','latitude':'37.414444'}],'flightPlanString':'STOCK L975 OTR UY70 BLUFA UL603 PAM UL620 NARKA UL618 MOKRU UL606 EKI\/N0459F370 VG80 OKESA VG80 AKBUK'}");
+      }
+    }
+
+
+	/**
+	* Method called from an external source (Flash) in order to set flight route data
+	* @param jsonFlightRouteData JSON encoded string with airports, airways and flight route
+	*/
+    function externalSetFlightRoute (jsonFlightRouteData){
+		setTimeout("map.getInfoWindow().hide()",0);
+		resetFlightRoute();
+		//parse JSON data
+		var flightRoute = eval('(' + jsonFlightRouteData + ')');
+
+
+
+		var airportStart= flightRoute.airportFrom;
+		var airportEnd = flightRoute.airportTo;
+
+		addAirport(airportStart.name,new GLatLng(airportStart.latitude,airportStart.longitude));
+		addAirport(airportEnd.name,new GLatLng(airportEnd.latitude,airportEnd.longitude));
+
+        airportManager.addMarkers(airportMarkers,0);
+        if(airportMarkers[0]!=null){
+        	map.setCenter(airportMarkers[0].getPoint(),9);
+        }
+
+        airportManager.refresh();
+
+		//need the first point of the waypoints
+		arWaypoints= flightRoute.waypoints;
+		if(arWaypoints==null) {
+			arWaypoints=[];
+		}
+		var pointDirection = new GLatLng(airportEnd.latitude,airportEnd.longitude);
+		if(arWaypoints.length>=1){
+			pointDirection=new GLatLng(arWaypoints[0].latitude,arWaypoints[0].longitude);
+		}
+		//alert('waypoints' + arWaypoints.length)
+
+
+		//add plane
+		addPlane("SK4040", airportMarkers[0].getPoint(), pointDirection);
+		planeManager.addMarkers(planeMarkers,0);
+		planeManager.refresh();
+
+
+
+
+		/* AIRWAYS are not in use
+		//add airways
+		arAirways= flightRoute.airways;
+		for (i=0;arAirways!=null && i<arAirways.length;i++){
+			airway = arAirways[i];
+			addAirway(airway.name, new GLatLng(airway.startLatitude,airway.startLongitude),new GLatLng(airway.endLatitude,airway.endLongitude));
+		}
+
+		airwayManager.addMarkers(airwayMarkers,0);
+		airwayManager.refresh();;
+		*/
+
+
+
+		//Add flight plan
+		points.push(airportMarkers[0].getPoint());
+
+		for (i=0;i<arWaypoints.length;i++){
+			waypoint = arWaypoints[i];
+			var point=new GLatLng(waypoint.latitude,waypoint.longitude);
+			addWaypoint(waypoint.id,point);
+			points.push (point);
+		}
+		waypointManager.addMarkers(waypointMarkers,0);
+		waypointManager.refresh();;
+
+		points.push(airportMarkers[1].getPoint());
+
+		map.addOverlay(new GPolyline(points));
+    }
+
+    /**
+	* Method called from an external source (Flash) in order to update flight data
+	* @param jsonFlightData JSON encoded string with information about plane location and target
+	*/
+    function externalSetFlightData (jsonFlightData){
+
+		//parse JSON data
+		var flightData = eval('(' + jsonFlightData + ')');
+
+		//alert("In  externalSetFlightData" + flightData.currentLat + "-" + flightData.currentLng);
+
+		pointPlaneNew = new GLatLng(flightData.currentLat,flightData.currentLng);
+		planeMarkers[0].setPoint(pointPlaneNew);
+		//Update target .. too simple since we might have skipped a way point if update took long time
+		for(var i=0;i<waypointIds.length;i++){
+			if(waypointIds[i]==flightData.targetId){
+				indexWaypoint=i;
+			}
+		}
+
+	}
+
+	/**
+	* Method called from an external source (Flash) in order to update flight data
+	* @param jsonFlightData JSON encoded string with information about plane location and target
+	*/
+    function externalSetFlightDataOther (jsonFlightDataOther){
+		/*
+		//parse JSON data
+		var arFlightDataOther = eval('(' + jsonFlightDataOther + ')');
+		resetPlaneOther();
+		planeOtherData=arFlightDataOther;
+
+
+
+		for(var i=0;i<planeOtherData.length;i++){
+			pointOtherPlaneNew = new GLatLng(planeOtherData[i].latitude,planeOtherData[i].longitude);
+			addPlaneOther(planeOtherData[i].userId, pointOtherPlaneNew,planeOtherData[i].headingRadians);
+		}
+		planeOtherManager.addMarkers(planeOtherMarkers,0);
+		planeOtherManager.refresh();
+		*/
+	}
+
+    /**
+	* Method called from an external source (Flash) in order to start flight
+	* @param jsonFlightData JSON encoded string with information about plane location and target
+	*/
+    function externalDoStartFlight(jsonDoStart){
+		alert("Do start" +jsonDoStart);
+		var flightData = eval('(' + jsonDoStart + ')');
+
+		planeTargetPoint=waypointMarkers[0].getPoint();
+
+		startDate=new Date();
+		//speed=3000ms update=500 ms
+		movePlaneLoop(flightData.speed,500);
+	}
+
+
+	/**
+	* Method called from an external source (Flash) when user has selected a possible starting airport
+	* @param jsonData JSON encoded string with information about airportname,icao and location
+	*/
+    function externalPossibleStartAirport(jsonDoStart){
+		planeOtherManager.clearMarkers();
+		var airportStart = eval('(' + jsonDoStart + ')');
+
+		alert(jsonDoStart);
+
+		var point= new GLatLng(airportStart.latitude,airportStart.longitude);
+		var markerPossibleAirportStart = createAirportMarker(point,airportStart.name);
+
+		possibleAirportManager.addMarker(markerPossibleAirportStart);
+		possibleAirportManager.refresh();
+		map.panTo(point);
+		map.setZoom(6);
+	}
+
+	/**
+	* Method called from an external source (Flash) when user has selected a possible starting airport
+	* @param jsonData JSON encoded string with information about airportname,icao and location
+	*/
+    function externalPossibleEndAirport(jsonDoStart){
+		var airportEnd = eval('(' + jsonDoStart + ')');
+
+		alert(jsonDoStart);
+
+		var point= new GLatLng(airportEnd.latitude,airportEnd.longitude);
+		var markerPossibleAirportEnd = createAirportMarker(point,airportEnd.name);
+
+		possibleAirportManager.addMarker(markerPossibleAirportEnd);
+		possibleAirportManager.refresh();
+		map.panTo(point);
+		map.setZoom(4);
+	}
+
+
+
+
+    function addAirway(name, pointStart,pointEnd){
+    	//alert('addAirway ' + name + " " + pointStart + " " + pointEnd);
+    	var markerStart = createAirportMarker(pointStart,name + " start");
+    	var markerEnd =createAirportMarker(pointEnd,name +" end");
+    	airwayMarkers.push(markerStart);
+    	airwayMarkers.push(markerEnd);
+
+    	airwayPoints=[];
+    	airwayPoints.push(pointStart);
+    	airwayPoints.push(pointEnd);
+    	map.addOverlay(new GPolyline(airwayPoints,airwayColors[colorIndex++]));
+    }
+
+    function addWaypoint(name, point){
+   		//alert('addWaypoint ' + name + " " + point);
+    	var marker = createWaypointMarker(point,name);
+    	waypointMarkers.push(marker);
+    	waypointIds.push(name);
+    }
+
+    function addAirport(name, point) {
+    	//alert('addAirport ' + name + " " + point);
+    	var marker = createAirportMarker(point,name);
+    	airportMarkers.push(marker);
+    }
+
+    function addPlane(name, point, pointDirection) {
+    		headingRad=headingRadians(point,pointDirection);
+
+	    	var marker = createPlaneMarker(point,name, headingRad);
+	    	planeMarkers.push(marker);
+    }
+
+    function addPlaneOther(name, point, headingRad) {
+
+	    	var marker = createPlaneOtherMarker(point,name,headingRad);
+	    	planeOtherMarkers.push(marker);
+    }
+
+    function resetPlaneOther(){
+  	  planeOtherMarkers=[];
+  	  planeOtherManager.clearMarkers();
+  	  planeOtherData=null;
+    }
+
+    function resetFlightRoute(){
+
+  	   airportManager.clearMarkers();;
+	   planeManager.clearMarkers();;
+	   airwayManager.clearMarkers();;
+	   waypointManager.clearMarkers();;
+
+		airportMarkers=[];
+		planeMarkers=[];
+		airwayMarkers=[];
+		waypointMarkers=[];
+		waypointIds=[];
+		indexWaypoint=0;
+		points=[];
+
+		map.clearOverlays() ;
+
+    }
+
+
+    function getPlaneIcon(){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+
+		icon.image = "http://flyingsim.com/prototype/3/plane90.gif";
+		//icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+		icon.iconSize = new GSize(31, 24);
+		//icon.shadowSize = new GSize(22, 20);
+		icon.iconAnchor = new GPoint(6, 20);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+
+    function getPlaneIconForHeading(headingRad){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+
+		if(headingRad<0) {
+			icon.image = "http://flyingsim.com/img/plane90.gif";
+		} else if (headingRad>=0){
+			icon.image = "http://flyingsim.com/img/plane270.gif";
+		}
+		//icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+		icon.iconSize = new GSize(31, 24);
+		//icon.shadowSize = new GSize(22, 20);
+		icon.iconAnchor = new GPoint(6, 20);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+
+    function getPlaneURLForHeading(headingRad){
+    		if(headingRad<0) {
+				return "http://flyingsim.com/img/plane90.gif";
+			} else if (headingRad>=0){
+				return "http://flyingsim.com/img/plane270.gif";
+		}
+    }
+
+
+    function getPlaneOtherIcon(){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+		icon.image = "http://flyingsim.com/img/plane270.gif";
+		//icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+		icon.iconSize = new GSize(16, 12);
+		//icon.shadowSize = new GSize(22, 20);
+		icon.iconAnchor = new GPoint(3, 10);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+
+    function getPlaneOtherIconForHeading(headingRad){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+
+		if(headingRad<0) {
+			icon.image = "http://flyingsim.com/img/plane90.gif";
+		} else if (headingRad>=0){
+			icon.image = "http://flyingsim.com/img/plane270.gif";
+		}
+		//icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+		icon.iconSize = new GSize(16, 12);
+		//icon.shadowSize = new GSize(22, 20);
+		icon.iconAnchor = new GPoint(3, 10);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+
+    function getAirportIcon(){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+		icon.image = "http://flyingsim.com/img/airport.gif";
+		//icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+		icon.iconSize = new GSize(50, 33);
+		//icon.shadowSize = new GSize(22, 20);
+		icon.iconAnchor = new GPoint(6, 20);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+
+	function createAirportMarker(point,description) {
+			var marker = new GMarker(point,getAirportIcon());
+			// Show this marker's index in the info window when it is clicked
+			var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
+			innerHTML += description;
+			innerHTML += "</div>";
+			GEvent.addListener(marker, "click", function() {
+				var infoTabs = [
+					  new GInfoWindowTab("Information", innerHTML),
+					  new GInfoWindowTab("Closeup", "This is tab #2 content")
+		  		];
+		  		marker.openInfoWindowTabsHtml(infoTabs);
+		  		//not applicable
+		  		//marker.showMapBlowup(showMapBlowupOptions);
+				//marker.openInfoWindowHtml(innerHTML);
+				smoothMoveToLocation(point);
+			});
+
+			return marker;
+
+	}
+
+	function createWaypointMarker(point,description) {
+			var marker = new GMarker(point);
+			// Show this marker's index in the info window when it is clicked
+			var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
+			innerHTML += description;
+			innerHTML += "</div>";
+			GEvent.addListener(marker, "click", function() {
+				var infoTabs = [
+					  new GInfoWindowTab("Information", innerHTML),
+					  new GInfoWindowTab("Closeup", "This is tab #2 content")
+		  		];
+		  		marker.openInfoWindowTabsHtml(infoTabs);
+		  		//not applicable
+		  		//marker.showMapBlowup(showMapBlowupOptions);
+				//marker.openInfoWindowHtml(innerHTML);
+				smoothMoveToLocation(point);
+			});
+
+			return marker;
+
+	}
+
+
+	function createAirwayMarker(point,description){
+		return createAirportMarker(point,description);
+	}
+
+	function createPlaneOtherMarker(point,description,headingRad) {
+			var marker = new GMarker(point, getPlaneOtherIconForHeading(headingRad));
+			return marker;
+	}
+
+	function createPlaneMarker(point,description, headingRad) {
+			var marker = new GMarker(point, getPlaneIconForHeading(headingRad));
+			// Show this marker's index in the info window when it is clicked
+			/*var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
+			innerHTML += description;
+			innerHTML += "</div>";
+			GEvent.addListener(marker, "click", function() {
+				var infoTabs = [
+					  new GInfoWindowTab("Information", innerHTML),
+					  new GInfoWindowTab("Closeup", "This is tab #2 content")
+				];
+				marker.openInfoWindowTabsHtml(infoTabs);
+				//not applicable
+				//marker.showMapBlowup(showMapBlowupOptions);
+				//marker.openInfoWindowHtml(innerHTML);
+				smoothMoveToLocation(point);
+			});*/
+
+			return marker;
+
+	}
+
+	function updatePlaneMarkerIcon(headingRad){
+		var url =getPlaneURLForHeading(headingRad);
+		planeMarkers[0].setImage(url);
+
+
+		/*
+		var currentPoint= planeMarkers[0].getPoint();
+		var marker = createPlaneMarker(currentPoint,"test", 1);
+		planeManager.clearMarkers();
+
+		planeMarkers=[];
+		planeMarkers.push(marker);
+		planeManager.addMarkers(marker,0);
+		planeManager.refresh();
+		*/
+
+	}
+
+	function flightCompleteClient(){
+
+		planeMarkers[0].setPoint(airportMarkers[1].getPoint());
+		bFlightCompletedClient=true;
+		map.openInfoWindowHtml(airportMarkers[1].getPoint(),  "",  {maxContent:"Flight has now been completed and we are awaiting for confirmation from the server in order to continue. <p>Please wait"});
+				//must be called asynch
+		setTimeout("map.getInfoWindow().maximize()",0);
+
+	}
+
+
+	function smoothMoveToLocation(point,description){
+		map.panTo(point);
+	}
+
+
+
+	function movePlane(speed,timeMS){
+		var bChangedWaypoint=false;
+		planePoint= planeMarkers[0].getPoint();
+
+		//check if we've reached our current target
+		if(planePoint.distanceFrom(planeTargetPoint)<2000) {
+			bChangedWaypoint=true;
+			indexWaypoint= indexWaypoint+1;
+
+			if(indexWaypoint>=waypointMarkers.length && bApproachingAirport==false){
+				bApproachingAirport=true;
+				planeTargetPoint=airportMarkers[1].getPoint();
+			}else if(indexWaypoint>=waypointMarkers.length && bApproachingAirport==true) {
+				//we've reached the end
+				flightCompleteClient();
+				return;
+
+			}else {
+				planeTargetPoint= waypointMarkers[indexWaypoint].getPoint();
+			}
+
+		}
+
+		metersToMove = speed*timeMS/1000;
+
+		heading=headingRadians(planePoint,planeTargetPoint);
+		if(bChangedWaypoint==true){
+			updatePlaneMarkerIcon(heading);
+		}
+
+
+		/*
+		document.getElementById('speed').innerHTML=""+speed + " m/s";
+		msTime = new Date().getTime()-startDate.getTime();
+		document.getElementById('time').innerHTML=""+(msTime/1000)+ " seconds";
+		document.getElementById('location').innerHTML=""+planePoint;
+		document.getElementById('targetLocation').innerHTML=""+waypointIds[indexWaypoint] + " " +waypointMarkers[indexWaypoint].getPoint();
+		document.getElementById('heading').innerHTML=""+heading;
+		document.getElementById('headingDegrees').innerHTML=""+radiansToDegrees(heading);
+		document.getElementById('distance').innerHTML=""+planePoint.distanceFrom(waypointMarkers[indexWaypoint].getPoint());
+		*/
+
+		moveMarker(planeMarkers[0],metersToMove,heading);
+
+		if(bTrackPlane){
+			map.panTo(planeMarkers[0].getPoint());
+		}
+	}
+
+	function movePlaneOther(timeMS){
+		if(planeOtherData==null){
+			return;
+		}
+		for(var i=0;i<planeOtherData.length;i++){
+			metersToMove = planeOtherData[i].speed*timeMS/1000;
+
+			moveMarker(planeOtherMarkers[i],metersToMove,planeOtherData[i].headingRadians);
+		}
+	}
+
+	function movePlaneLoop(speed, timeoutMS){
+		try {
+			if (bFlightCompletedClient==false){
+				movePlane(speed,timeoutMS);
+			}
+			movePlaneOther(timeoutMS);
+		} catch (e){
+			alert("Got exception " + e + "\nClick ok to continue");
+		}
+		setTimeout("movePlaneLoop("+speed+"," + timeoutMS+")",timeoutMS);
+	}
+
+
+	function moveMarker2(marker, meters,heading) {
+		oldPoint = marker.getPoint();
+
+		newLat=oldPoint.lat()+(((1/3600)*meters/(30.92))*Math.cos(heading));
+		newLng=oldPoint.lng() + (((1/3600)*meters/(30.92))*-Math.sin(heading))/Math.cos(oldPoint.latRadians());
+		newPoint=new GLatLng(newLat,newLng);
+
+		//alert("Oldpoint " + oldPoint + " newpoint "+newPoint + " ("+((1/3600)*meters/(30.9))+")");
+
+		marker.setPoint(newPoint);
+
+	}
+	//from http://bbs.keyhole.com/ubb/showflat.php?Cat=&Board=SupportKML&Number=166379&Searchpage=1&Main=166379&Words=calculate+TJ1&topic=&Search=true#Post166379
+	function moveMarker(marker, meters,heading) {
+		EARTH_RADIUS_EQUATOR = 6378140.0;
+		RADIAN = 180 / Math.PI;
+		long= marker.getPoint().lngRadians();
+	 	lat=marker.getPoint().latRadians();
+		f = 1/298.257;
+		e = 0.08181922;
+
+		R = EARTH_RADIUS_EQUATOR * (1 - e * e) / Math.pow( (1 - e*e * Math.pow(Math.sin(lat),2)), 1.5);
+		psi = meters/R;
+		phi = Math.PI/2 - lat;
+		arccos = Math.cos(psi) * Math.cos(phi) + Math.sin(psi) * Math.sin(phi) * Math.cos(heading);
+		newLat = (Math.PI/2 - Math.acos(arccos)) * RADIAN;
+		arcsin = Math.sin(heading) * Math.sin(psi) / Math.sin(phi);
+		newLng = (long - Math.asin(arcsin)) * RADIAN;
+
+		newPoint=new GLatLng(newLat,newLng);
+		marker.setPoint(newPoint);
+	}
+
+
+	//from http://svn.geotracing.codehaus.org/browse/geotracing/base/trunk/server/webapp/gt/lib/GMap.js?r=201
+	function headingRadians( pointCurrent,pointTarget ) {
+	 	   var lon1,lon2,lat1,lat2;
+	 	   lon1= pointCurrent.lngRadians();
+	 	   lat1=pointCurrent.latRadians();
+	 	   lon2=pointTarget.lngRadians();
+	 	   lat2=pointTarget.latRadians();
+	 	   var v1, v2;
+	 	   v1 = Math.sin(lon1 - lon2) * Math.cos(lat2);
+	 	   v2 = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 -  lon2);
+	 	   // rounding error protection
+	 	   if (Math.abs(v1) < 1e-15) v1 = 0.0;
+	 	   if (Math.abs(v2) < 1e-15) v2 = 0.0;
+	 	   return Math.atan2(v1, v2);
+ 	 }
+
+
+ 	    function heading( pointCurrent,pointTarget) {
+	  	                var v1, v2;
+
+	  	                lon1= pointCurrent.lngRadians();
+							 	   lat1=pointCurrent.latRadians();
+							 	   lon2=pointTarget.lngRadians();
+	 					   lat2=pointTarget.latRadians();
+
+	  	                // The wiz-stuff
+	  	                v1 = Math.sin(lon1 - lon2) * Math.cos(lat2);
+	  	                v2 = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2);
+
+	  	                // rounding error protection
+	  	                if (Math.abs(v1) < 1e-15) {
+	  	                        v1 = 0.0;
+	  	                }
+
+	  	                if (Math.abs(v2) < 1e-15) {
+	  	                        v2 = 0.0;
+	  	                }
+
+	  	                var course = Math.atan2(v1, v2);
+
+	  	                // Course is in radians from -PI to PI
+	  	                // Correct for degrees 0..360
+	  	                course = radiansToDegrees(course);
+
+	  	                // hmmm, correct negative values
+	  	                if (course < 0) {
+	  	                        course = -course;
+	  	                }
+
+	  	                // hmmmm correct when westbound...
+	  	                if (lon2 < lon1) {
+	  	                        course = 360 - course;
+	  	                }
+
+	  	                return course;
+ 	        }
+
+ 	 function radiansToDegrees(radians){
+ 	 	return (radians/(Math.PI))*180;
+ 	 }
+
+	function toogleTrackPlane(){
+		if(bTrackPlane==false){
+			bTrackPlane=true;
+		}else{
+			bTrackPlane=false;
+		}
+
+	}
+
+	function startFlight(){
+		startDate=new Date();
+		//speed=3000ms update=500 ms
+		movePlaneLoop(5000,500);
+	}
+
+
+
+ 	 //http://www.uwgb.edu/dutchs/UsefulData/UTMFormulas.HTM
+ 	 //A second is 30.9 meters
+
+    //]]>
+    </script>
+  </head>
+  <body onload="load()" onunload="GUnload()">
+
+<table width="820" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>
+	<div id="ui">
+	<div class="roundedcornr_box_640766">
+	   <div class="roundedcornr_top_640766"><div></div></div>
+		  <div class="roundedcornr_content_640766">
+
+				<object id="flyingsimUI" name="flyingsimUI" data="/flash/FlyingsimUI.swf" type="application/x-shockwave-flash" width="700" height="300">
+					<param name="movie" value="/flash/FlyingsimUI.swf" />
+				</object>
+
+
+				<div id="map" style="width: 700px; height: 300px"></div>
+				<input type="button" value="Follow plane" onClick="toogleTrackPlane();">
+
+		  </div>
+	   <div class="roundedcornr_bottom_640766"><div></div></div>
+	</div>
+	</div>
+		</td>
+
+		<td valign="top" width="120">
+	<div id="ad_vertical">
+	<div class="roundedcornr_box_640766">
+	   <div class="roundedcornr_top_640766"><div></div></div>
+		  <div class="roundedcornr_content_640766"  style="height:627px">
+					<script type="text/javascript"><!--
+					google_ad_client = "pub-0799019814133735";
+					/* 120x600, opprettet 18.03.08 */
+					google_ad_slot = "8869260125";
+					google_ad_width = 120;
+					google_ad_height = 600;
+					//-->
+					</script>
+					<script type="text/javascript"
+					src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+					</script>
+		  </div>
+	   <div class="roundedcornr_bottom_640766"><div></div></div>
+	</div>
+	</div>
+		</td>
+	</tr>
+
+</table>
+
+<div id="ad_horizontal">
+	<div class="roundedcornr_box_640766">
+	   <div class="roundedcornr_top_640766"><div></div></div>
+		  <div class="roundedcornr_content_640766" >
+				<!--style="padding:0px 0px 0px 62px"-->
+							<script type="text/javascript"><!--
+							google_ad_client = "pub-0799019814133735";
+							google_ad_width = 728;
+							google_ad_height = 90;
+							google_ad_format = "728x90_as";
+							google_ad_type = "text";
+							google_ad_channel = "";
+							//--></script>
+							<script type="text/javascript"
+							  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+							</script>
+		  </div>
+	   <div class="roundedcornr_bottom_640766"><div></div></div>
+	</div>
+</div>
+
+
+  </body>
+</html>

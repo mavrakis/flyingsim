@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {% block head_tags %}<meta http-equiv="content-type" content="text/html; charset=utf-8"/>{% endblock %}
+    
+  </head>
+  <body {% block body_attrs %}{% endblock %}>
+
+{% block top_content %}{% endblock %}
+
+
+
+{% block top_ads %}
+{% endblock %}
+
+
+{% block middle_content %}{% endblock %}
+
+
+{% block bottom_ads %}
+<script type="text/javascript"><!--
+google_ad_client = "pub-0799019814133735";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text";
+google_ad_channel = "";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+{% endblock %}
+
+{% block bottom_content %}{% endblock %}
+
+{% block footer %}{% endblock %}
+  </body>
+</html>
