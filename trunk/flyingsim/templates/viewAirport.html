@@ -1,0 +1,111 @@
+{% extends "baseSimplePage.html" %}
+
+{% block head_tags %}
+{{ block.super }}
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"
+      type="text/javascript"></script>
+    <script type="text/javascript">
+
+    //<![CDATA[
+	var map ;
+	var markerManager;
+	var markers=[];
+	var showMapBlowupOptions;
+    var adsManager;
+
+
+    function load() {
+      if (GBrowserIsCompatible()) {
+        map = new GMap2(document.getElementById("map"));
+        map.addControl(new GSmallMapControl());
+		map.addControl(new GMapTypeControl());
+        map.setCenter(new GLatLng(51.883333333333, 0.23333333333333),4);
+		map.setMapType(G_SATELLITE_MAP);
+
+        markerManager = new GMarkerManager(map);
+
+		showMapBlowupOptions= {selectedTab: 1}
+
+		adsManager= new GAdsManager(map, "ca-pub-0799019814133735",{maxAdsOnMap:20,minZoomLevel:1} );
+		adsManager.enable();
+
+		var point;
+		var marker;
+
+		{% for airport in airports %}
+		addAirport("{{ airport.name }}","{{ airport.point.lat }}","{{ airport.point.lon }}");
+		{% endfor %}
+                
+        markerManager.addMarkers(markers,0);
+        if(markers[0]!=null){
+        	map.setCenter(markers[0].getPoint(),4);
+        }
+        markerManager.refresh();
+
+      }
+    }
+
+    function addAirport(name, lat, long) {
+    	var marker = createMarker(new GLatLng(lat,long),name);
+    	markers.push(marker);
+    }
+
+	function createMarker(point,description) {
+
+			var marker = new GMarker(point);
+
+			// Show this marker's index in the info window when it is clicked
+			var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
+			innerHTML += description;
+			innerHTML += "</div>";
+			GEvent.addListener(marker, "click", function() {
+				var infoTabs = [
+					  new GInfoWindowTab("Information", innerHTML),
+					  new GInfoWindowTab("Closeup", "This is tab #2 content")
+		  		];
+		  		marker.openInfoWindowTabsHtml(infoTabs);
+		  		//not applicable
+		  		//marker.showMapBlowup(showMapBlowupOptions);
+				//marker.openInfoWindowHtml(innerHTML);
+				smoothMoveToLocation(point);
+			});
+
+			return marker;
+
+		}
+	function smoothMoveToLocation(point,description){
+		map.panTo(point);
+
+		map.showMapBlowup(point);
+		/*map.zoomIn();
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);
+		setTimeout("map.zoomIn()",5000);*/
+
+
+	}
+
+
+    //]]>
+    </script>
+{% endblock %}
+{% block body_attrs %}onload="load()" onunload="GUnload()"{{ block.super }}{% endblock %}>
+
+{% block middle_content %}
+<ul>
+{% for airport in airports %}
+	<li>Airport name:{{ airport.name }}
+	<li>Airport location:({{ airport.point.lat }},{{ airport.point.lon }})
+	<li>Airport country:{{ airport.country }}
+	<li>Airport IATA code:{{ airport.iata_id }}
+	<li>Airport ICAO code:{{ airport.icao_id}}
+{% endfor %}
+</ul>
+
+<div id="map" style="width: 800px; height: 400px"></div>
+{% endblock %}

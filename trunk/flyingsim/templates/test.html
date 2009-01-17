@@ -1,0 +1,13 @@
+{% for flight in flights %}
+<p> {{flight.user}} : {{flight.description}}<br>
+{{flight.timeStart|timesince}}<hr>
+
+{% endfor %}
+
+<form method="POST" action="/post/">
+<table>
+{{form}}
+
+<tr><td><input type="submit"></td></tr>
+</table>
+</form>
