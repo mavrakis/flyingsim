@@ -32,9 +32,11 @@ class Airport(SearchableModel, JSONExportable):
 	icao_id = db.StringProperty(required=True)
 	name = db.StringProperty(required=True)
 	iata_id = db.StringProperty()
-	#country=db.StringProperty()
-	country=db.ReferenceProperty(Country)
+	country=db.StringProperty(required=True)
+	#country=db.ReferenceProperty(Country)
 	point = db.GeoPtProperty(required=True)
+	pointLat=db.IntegerProperty()
+	pointLon=db.IntegerProperty()
 	def getJSONFields(self):
 		ret = super(Airport, self).getJSONFields()
 		ret['latitude'] = self.point.lat
@@ -51,31 +53,38 @@ class Airport(SearchableModel, JSONExportable):
 	findAvailableAirportsFrom = staticmethod(findAvailableAirportsFrom)
 	
 	def closestToPointExact(airportA, airportB, point):
-		distSumA =GeoUtils.distanceBetween(airportA.point,point)
-		airportA.distanceTo=distSumA
-		distSumB= GeoUtils.distanceBetween(airportB.point,point)
-		airportB.distanceTo=distSumB
+		""" Exact operator which calculates distance to point from airport and compares meters """
+		if not hasattr(airportA,"distanceTo"):
+		  distSumA =GeoUtils.distanceBetween(airportA.point,point)
+		  airportA.distanceTo=distSumA
 		
-		if distSumA>distSumB:
+		if not hasattr(airportB,"distanceTo"):
+			distSumB= GeoUtils.distanceBetween(airportB.point,point)
+			airportB.distanceTo=distSumB
+		
+		if airportA.distanceTo>airportB.distanceTo:
 			return 1
-		elif distSumA==distSumB:
+		elif airportA.distanceTo==airportB.distanceTo:
 			return 0
 		else:
 			return -1
 	closestToPointExact=staticmethod(closestToPointExact)
 
-	def closestToPointSimple(airportA, airportB, point):
-		distLatA = math.fabs(max(airportA.point.lat, point.lat) - min(airportA.point.lat, point.lat))
-		distLonA = math.fabs(max(airportA.point.lon, point.lon) - min(airportA.point.lon, point.lon))
-		distSumA= distLatA+distLonA
+	def closestToPointSimple(airportA, airportB, pointLat,pointLon):
+		""" Very simple comparison operator which works on integer properties """
+		if not hasattr(airportA, "relDistance"):
+			distLatA = max(airportA.pointLat,pointLat) - min(airportA.pointLat, pointLat)
+			distLonA = max(airportA.pointLon, pointLon) - min(airportA.pointLon, pointLon)
+			airportA.relDistance= distLatA+distLonA
 		
-		distLatB = math.fabs(max(airportB.point.lat, point.lat) - min(airportB.point.lat, point.lat))
-		distLonB = math.fabs(max(airportB.point.lon, point.lon) - min(airportB.point.lon, point.lon))
-		distSumB= distLatB+distLonB
+		if not hasattr(airportB, "relDistance"):
+			distLatB = max(airportB.pointLat,pointLat) - min(airportB.pointLat, pointLat)
+			distLonB = max(airportB.pointLon, pointLon) - min(airportB.pointLon, pointLon)
+			airportB.relDistance = distLatB+distLonB
 		
-		if distSumA>distSumB:
+		if airportA.relDistance>airportB.relDistance:
 			return 1
-		elif distSumA==distSumB:
+		elif airportA.relDistance==airportB.relDistance:
 			return 0
 		else:
 			return -1

@@ -47,7 +47,7 @@
         if(closeToMarker!=null){
         	map.setCenter(closeToMarker.getPoint(),7);
         }else if(markers.length!=0){
-        	map.setCenter(markers[0].getPoint(),4);
+        	map.setCenter(markers[0].getPoint(),5);
         }
         markerManager.refresh();
 
@@ -171,7 +171,7 @@
 						<a href="/airports/closeto/({{ airport.point.lat }},{{ airport.point.lon }})/" alt="Click here to view all airports close to this location">
 						({{ airport.point.lat }},{{ airport.point.lon }})</a>
 						</td></tr>
-						<tr><td>country:</td><td>{{ airport.country.name }}</td></tr>
+						<tr><td>country:</td><td>{{ airport.country }}</td></tr>
 						<tr><td>IATA code:</td><td>{{ airport.iata_id }}</td></tr>
 						<tr><td>ICAO code:</td><td>{{ airport.icao_id}}</td></tr>
 						{% if airport.distanceTo %}
