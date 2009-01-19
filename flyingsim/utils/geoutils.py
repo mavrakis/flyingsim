@@ -1,3 +1,5 @@
+import math
+
 class GeoUtils:
 #From http://groups-beta.google.com/group/Google-Maps-API/browse_thread/thread/20fadd10c5557c50/fdd0fc490229dea3?q=math.cos&rnum=2#fdd0fc490229dea3
     def distanceBetween(geoPtA, geoPtB):        

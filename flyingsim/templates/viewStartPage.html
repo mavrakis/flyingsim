@@ -1,0 +1,154 @@
+{% extends "baseTabbedPage.html" %}
+
+{% block head_tags %}
+{{ block.super }}
+      <script type="text/javascript"
+		src="http://www.google.com/jsapi?key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"></script>
+{% endblock %}
+
+{% block title %}Flyingsim.com{% endblock %}
+
+{% block main_content %}
+<ul>
+	<div id="container">
+		<ul class="menu">
+			<li id="tab1" class="fade active">Flight</li>
+			<li id="tab2" class="fade">Airports of the world</li>
+			<li id="tab3" class="fade">Top users</li>
+			<li id="tab4" class="fade">About</li>
+		</ul>
+		<span class="clear"></span>
+		<div class="content tab1">
+			<h1>Coming soon: Flying Simulator 2009</h1>
+			<img src="http://www.flyingsim.com/img/logo.jpg" height="400">
+			<p>We are currently in a pre-alpha stage. For now check out the airport search through the tab "Airports of the world" above.
+			<script type="text/javascript">
+				if (google.loader.ClientLocation){
+					var city;
+					var country;
+					var lat;
+					var lon;
+					city= google.loader.ClientLocation.address.city;
+					country=google.loader.ClientLocation.address.country;
+					lat = google.loader.ClientLocation.latitude ;
+					lon = google.loader.ClientLocation.longitude  ;
+
+					document.write("<br>You can even view the airports closest to your current location by <a href=\"/airports/closeto/("+lat+","+lon+")/\">clicking here.</a>");
+				}
+
+			</script>
+			
+			<p>Get on board and fly the modern passenger planes of the world. This is by far the most realistic flight simulator ever made, with events happening real-time according to detailed statistical analysis.</p>
+			<ul class="normal">
+				<li>Fly between almost all airports in the world, over 3400 will be available in the first version(data delivered by ICAO)
+				<li>Slick flying interface made in Adobe Flash, with unprecedented graphics and realism
+				<li>Tight integration with Google maps for keeping track of your itinerary and previous flights
+				<li>Earn frequent flier miles for your flights and compete with other people online
+				<li>Actual weather from around the world integrated into simulation provides ground breaking experience
+				<li>Gather flags from around the world as you visit the most remote airports on earth. Can you collect them all?
+				<li>All aspects of flying are covered, you would swear that you were on the inside of a plane
+			</ul>
+		</div>
+		<div class="content tab2">
+			<h1>Search the airports of the world</h1>
+			
+			As a community service, we are providing you with information of the over 3400 airports in our systems.
+			<br>You can locate an airport based on country, name, IATA code, ICAO code or close to coordinates through the form below.
+			<script type="text/javascript">
+				if (google.loader.ClientLocation){
+					var city;
+					var country;
+					var lat;
+					var lon;
+					city= google.loader.ClientLocation.address.city;
+					country=google.loader.ClientLocation.address.country;
+					lat = google.loader.ClientLocation.latitude ;
+					lon = google.loader.ClientLocation.longitude  ;
+
+					document.write("<p>We have been able to identify your position close to "+ city + " in " + country);
+					document.write("<br><a href=\"/airports/closeto/("+lat+","+lon+")/\">Click to view the airports closest to your current position</a>");
+				}
+			</script>
+			<table class="outlined">
+				<tr>
+
+					<td valign="top" width="250">
+						<table class="outlined">
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="name"/>
+								Search by airport name:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="iata"/>
+								Search by airport IATA id:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="icao"/>
+								Search by airport ICAO id:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="closeto"/>
+								Search close to latitude and longitude:<br>
+								<table>
+								<tr><td>Latitude:</td><td><input type="text" name="lat" length="10" size="8"/></td></tr>
+								<tr><td>Longitude:</td><td><input type="text" name="lon" length="10" size="8"/><input type="submit" value="Search"/></td></tr>								
+								</table>
+								</form>
+							</td></tr>															
+						</table>
+					</td>
+					<td valign="top">
+						Search by country:<br>
+						{% for country in countries %}
+							<a href="/airports/country/{{country.name}}">{{country.name}}</a>,&nbsp;
+						{% endfor %}
+					
+					</td>					
+				</tr>
+			</table>
+
+		</div>
+		<div class="content tab3">
+			<h1>Top ranked users</h1>
+			User list
+
+		</div>
+
+		<div class="content tab4">
+			<h1>About flyingsim.com</h1>
+			<h2>We aim to please</h2>
+			<p>Please note that although we aim to give the experience of a life time, we do not in any way refund time wasted on this site.</p>
+
+			<h2>Data</h2>
+				<a href="flyingsim.com">flyingsim.com</a> uses data from the excellent <a href="http://data.x-plane.com/" target="_blank">http://data.x-plane.com/</a> under GPL license
+				<br>Please do not "mine" this site, instead get the data from <a href="http://code.google.com/p/flyingsim/source/browse/#svn/trunk/work/airports">code.google.com</a>
+			<h2>Technology</h2>
+			<p>This site runs on Google AppEngine using the Django framework for Python. The front-end is a mash-up of flash built with Adobe Flex and Google Maps.
+			<p>We of course strive to have our solution cover as many buzz words and different technologies as possible. The current list includes:
+			<ul class="normal">
+				<li>Cloud based infrastructure
+				<li>Mashup
+				<li>REST services
+				<li>JSON
+				<li>XML (Note to self: Add some useless xml file in somewhere in the code)
+				<li>Web2.0
+				<li>Memcache
+				<li>OpenId
+				<li>JQuery
+			</ul>
+
+		</div>
+	</div>
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/tabs.js"></script>
+{% endblock %}

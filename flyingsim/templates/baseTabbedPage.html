@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+{% block head_tags %}
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="description" content="Flying Simulator 2009. Get on board and fly the modern passenger planes of the world. This is by far the most realistic online flight simulator ever made. All aspects of flying are covered, you would swear that you are on the inside of a plane">
+    <meta name="keywords" content="flying,flight, flying simulator, flight simulator, passenger planes, icao, airports, airways, google maps">
+{% endblock %}
+{% block head_script_analytics %}
+	<script type="text/javascript">
+		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+		</script>
+		<script type="text/javascript">
+		try {
+		var pageTracker = _gat._getTracker("UA-7052732-1");
+		pageTracker._trackPageview();
+		} catch(err) {}
+	</script>
+{% endblock %}
+	
+
+{% block head_style %}
+	<!-- link rel="stylesheet" href="/css/start.css" type="text/css" media="screen" /-->
+    <style type="text/css">
+/******* GENERAL RESET *******/
+/******* html,h1, h2, h3, h4, h5, h6,p,ul, li,img,table, caption, tbody, tfoot, thead, tr, th, td,font,body******/
+div, span, applet, object, iframe,   blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em,
+  ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol,  fieldset, form, label, legend  {
+	border:0pt none;
+	font-family:inherit;
+	font-size: 100%;
+	font-style:inherit;
+	font-weight:inherit;
+	margin:0pt;
+	padding:0pt;
+	vertical-align:baseline;
+}
+
+body{
+	background: #fff;
+	line-height:14px;
+	font-size: 14px;
+	font-family: Arial,  Verdana, Helvetica, sans-serif;
+	margin:0pt;
+	cursor:default;
+	overflow: auto;
+}
+html,body{
+	height:100%;
+	text-align: center;
+}
+
+.outlined {
+	border-color: rgb(78, 105, 115);
+	border-style: dashed;
+	border-width: 1px;
+}
+
+.clear{
+	clear: both;
+	height: 0;
+	visibility: hidden;
+	display: block;
+}
+a{
+	text-decoration: none;
+}
+/******* GENERAL RESET *******/
+/******* LOGO *******/
+#logo{
+	margin-top: 1em;
+	display: block;
+}
+/******* /LOGO  *******/
+/******* MENU *******/
+#container{
+	margin: 2em auto;
+	width: 95%;
+}
+#container ul{
+	margin:0pt;
+	padding:0pt;
+	list-style: none;
+	list-style-position: outside;
+}
+#container ul.menu li{
+	float: left;
+	margin-right: 5px;
+	margin-bottom: -1px;
+}
+#container ul.menu li{
+	font-weight: 700;
+	display: block;
+	padding: 5px 10px 5px 10px;
+	background: #efefef;
+	margin-bottom: -1px;
+	border: 1px solid #d0ccc9;
+	border-width: 1px 1px 1px 1px;
+	position: relative;
+	color: #898989;
+	cursor: pointer;
+}
+#container ul.menu li.active{
+	background: #fff;
+	top: 1px;
+	border-bottom: 0;
+	color: #5f95ef;
+}
+/******* /MENU *******/
+/******* CONTENT *******/
+.content{
+	margin: 0pt auto;
+	background: #efefef;
+	background: #fff;
+	border: 1px solid #d0ccc9;
+	text-align: left;
+	padding: 10px;
+	padding-bottom: 20px;
+	font-size: 13px;
+}
+.content h1{
+	line-height: 1em;
+	vertical-align: middle;
+	height: 48px;
+	padding: 0px 0px 10px 30px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	font-size: 32px;
+}
+
+.content h2{
+	font-size: 16px;
+	margin-top: 0px;
+	margin-bottom: 0px;	
+}
+
+ul.normal{
+	display: block;
+	height: 100px;
+	list-style-type: disc;
+	margin-bottom: 16px;
+	margin-right: 0px;
+	margin-top: 16px;
+}
+
+ul.normal li{
+	display: list-item;
+	margin-left: 16px;
+	list-style-type: disc;
+}
+
+/******* /CONTENT *******/
+/******* NEWS *******/
+
+.content.tab1{
+	display: block;
+}
+/******* /NEWS *******/
+/******* TUTORIALS *******/
+
+.content.tab2{
+	display: none;
+}
+/******* /TUTORIALS *******/
+/******* TUTORIALS *******/
+
+.content.tab3{
+	display: none;
+}
+/******* /TUTORIALS *******/
+
+/******* LINKS *******/
+
+.content.tab4{
+	display: none;
+}
+
+.content.tabx
+{
+	display: none;
+}
+/******* /LINKS *******/    
+    
+    </style>
+    <!--[if IE 6]>
+		<link rel="stylesheet" href="css/ie6.css" type="text/css" media="screen," />
+	<![endif]-->
+{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+
+{% block top_content %}{% endblock %}
+
+
+
+{% block top_ads %}{% endblock %}
+
+
+{% block main_content %}
+{% endblock %}
+
+
+{% block bottom_ads %}
+	<script type="text/javascript"><!--
+	google_ad_client = "pub-0799019814133735";
+	google_ad_width = 728;
+	google_ad_height = 90;
+	google_ad_format = "728x90_as";
+	google_ad_type = "text";
+	google_ad_channel = "";
+	//--></script>
+	<script type="text/javascript"
+	
+	  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+	</script>
+{% endblock %}
+{% block footer %}{% endblock %}
+</body>
+</html>

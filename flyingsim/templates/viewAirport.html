@@ -1,15 +1,17 @@
-{% extends "baseSimplePage.html" %}
-
+{% extends "baseTabbedPage.html" %}
 {% block head_tags %}
 {{ block.super }}
     <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"
       type="text/javascript"></script>
+      <script type="text/javascript"
+		src="http://www.google.com/jsapi?key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"></script>
     <script type="text/javascript">
-
+    
     //<![CDATA[
 	var map ;
 	var markerManager;
 	var markers=[];
+	var closeToMarker;
 	var showMapBlowupOptions;
     var adsManager;
 
@@ -35,9 +37,16 @@
 		{% for airport in airports %}
 		addAirport("{{ airport.name }}","{{ airport.point.lat }}","{{ airport.point.lon }}");
 		{% endfor %}
+
+		{% if pointCloseTo %}
+		addCloseTo("{{ pointCloseTo.lat }}","{{pointCloseTo.lon }}");
+		{% endif %}
                 
         markerManager.addMarkers(markers,0);
-        if(markers[0]!=null){
+
+        if(closeToMarker!=null){
+        	map.setCenter(closeToMarker.getPoint(),7);
+        }else if(markers.length!=0){
         	map.setCenter(markers[0].getPoint(),4);
         }
         markerManager.refresh();
@@ -46,14 +55,29 @@
     }
 
     function addAirport(name, lat, long) {
-    	var marker = createMarker(new GLatLng(lat,long),name);
+    	var marker = createAirportMarker(new GLatLng(lat,long),name);
+    	markers.push(marker);
+    }
+    function getAirportIcon(){
+    	// Create our "tiny" marker icon
+		var icon = new GIcon();
+		icon.image = "http://www.flyingsim.com/img/airport.gif";
+		icon.iconSize = new GSize(50, 33);
+		icon.iconAnchor = new GPoint(6, 20);
+		icon.infoWindowAnchor = new GPoint(5, 1);
+		return icon;
+    }
+    
+
+    function addCloseTo(lat,long) {
+    	var marker = createMarker(new GLatLng(lat,long),"Target point");
+    	closeToMarker=marker;
     	markers.push(marker);
     }
 
-	function createMarker(point,description) {
-
-			var marker = new GMarker(point);
-
+    
+	function createAirportMarker(point,description) {
+			var marker = new GMarker(point,getAirportIcon());
 			// Show this marker's index in the info window when it is clicked
 			var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
 			innerHTML += description;
@@ -71,41 +95,182 @@
 			});
 
 			return marker;
-
 		}
+	function createMarker(point,description) {
+		var marker = new GMarker(point);
+		// Show this marker's index in the info window when it is clicked
+		var	innerHTML =  "<div style='font-size: 10px; font-family: Verdana; white-space: nowrap; text-align:left;'>";
+		innerHTML += description;
+		innerHTML += "</div>";
+		GEvent.addListener(marker, "click", function() {
+			var infoTabs = [
+				  new GInfoWindowTab("Information", innerHTML),
+				  new GInfoWindowTab("Closeup", "This is tab #2 content")
+	  		];
+	  		marker.openInfoWindowTabsHtml(infoTabs);
+			smoothMoveToLocation(point);
+		});
+
+		return marker;
+	}	
+	
 	function smoothMoveToLocation(point,description){
 		map.panTo(point);
 
 		map.showMapBlowup(point);
-		/*map.zoomIn();
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);
-		setTimeout("map.zoomIn()",5000);*/
-
 
 	}
-
-
     //]]>
     </script>
 {% endblock %}
 {% block body_attrs %}onload="load()" onunload="GUnload()"{{ block.super }}{% endblock %}>
 
-{% block middle_content %}
+{% block main_content %}
 <ul>
-{% for airport in airports %}
-	<li>Airport name:{{ airport.name }}
-	<li>Airport location:({{ airport.point.lat }},{{ airport.point.lon }})
-	<li>Airport country:{{ airport.country }}
-	<li>Airport IATA code:{{ airport.iata_id }}
-	<li>Airport ICAO code:{{ airport.icao_id}}
-{% endfor %}
-</ul>
+	<div id="container">
+		<ul class="menu">
+			<li id="tab1" class="fade active">View airports from search</li>
+			<li id="tab2" class="fade">Search</li>
+			<li id="tabx"><a href="/">Back to main page</a></li>
+		</ul>
+		<span class="clear"></span>
+		<div class="content tab1">
+			<h1>{{searchDone}}</h1>
+			<div id="map" style="width: 800px; height: 400px"></div>
 
-<div id="map" style="width: 800px; height: 400px"></div>
+			
+			{% if airports %} 
+				<p>The locations of the airports found are marked on the map above.</p>
+				{% if not airports|length_is:"1" %}
+				<p>We found {{airports|length}} airports matching your query which are listed below:</p>
+				{% endif %}
+	<script type="text/javascript"><!--
+	google_ad_client = "pub-0799019814133735";
+	google_ad_width = 728;
+	google_ad_height = 90;
+	google_ad_format = "728x90_as";
+	google_ad_type = "text";
+	google_ad_channel = "";
+	//--></script>
+	<script type="text/javascript"
+	
+	  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+	</script>
+				
+				<table>
+				{% for airport in airports %}
+					{% if not forloop.counter|divisibleby:2 %}
+					<tr>
+					{% endif %}
+					<td>
+					<h3>Airport name: {{ airport.name }}</h3>
+					
+					The following information is known for the airport {{ airport.name }}:
+					<table class="outlined">
+						<tr><td>location:</td><td>
+						<a href="/airports/closeto/({{ airport.point.lat }},{{ airport.point.lon }})/" alt="Click here to view all airports close to this location">
+						({{ airport.point.lat }},{{ airport.point.lon }})</a>
+						</td></tr>
+						<tr><td>country:</td><td>{{ airport.country.name }}</td></tr>
+						<tr><td>IATA code:</td><td>{{ airport.iata_id }}</td></tr>
+						<tr><td>ICAO code:</td><td>{{ airport.icao_id}}</td></tr>
+						{% if airport.distanceTo %}
+						<tr><td>Distance from target:</td><td>{{ airport.distanceTo|floatformat}} meters</td></tr>	
+						{% endif %}
+					</table>
+					</td>
+					{% if  forloop.counter|divisibleby:2 %}
+					</tr>
+					{% endif %}
+				{% endfor %}
+				</table>
+			{% else %}
+				<h3>Sorry, we could not find any airports matching your query. Message is "{{reason}}"</h3>
+				<p>Please try to search again using the search tab above.
+			{% endif %}
+					
+		
+			
+			
+		</div>
+		<div class="content tab2">
+			<h1>Search the airports of the world</h1>
+			
+			As a community service, we are providing you with information of the over 3400 airports in our systems.
+			<br>You can locate an airport based on country, name, IATA code, ICAO code or close to coordinates through the form below.
+			<script type="text/javascript">
+				if (google.loader.ClientLocation){
+					var city;
+					var country;
+					var lat;
+					var lon;
+					city= google.loader.ClientLocation.address.city;
+					country=google.loader.ClientLocation.address.country;
+					lat = google.loader.ClientLocation.latitude ;
+					lon = google.loader.ClientLocation.longitude  ;
+
+					document.write("<p>We have been able to identify your position close to "+ city + " in " + country);
+					document.write("<br><a href=\"/airports/closeto/("+lat+","+lon+")/\">Click to view the airports closest to your current position</a>");
+				}
+			</script>
+			<table class="outlined">
+				<tr>
+
+					<td valign="top" width="250">
+						<table class="outlined">
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="name"/>
+								Search by airport name:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="iata"/>
+								Search by airport IATA id:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="icao"/>
+								Search by airport ICAO id:<br>
+								<input type="text" name="query" length="50"/><input type="submit" value="Search"/>
+								</form>
+							</td></tr>
+							<tr><td>
+								<form method="POST" action="/airports/search/">
+								<input type="hidden" name="searchBy" value="closeto"/>
+								Search close to latitude and longitude:<br>
+								<table>
+								<tr><td>Latitude:</td><td><input type="text" name="lat" length="10" size="8"/></td></tr>
+								<tr><td>Longitude:</td><td><input type="text" name="lon" length="10" size="8"/><input type="submit" value="Search"/></td></tr>								
+								</table>
+								</form>
+							</td></tr>															
+						</table>
+					</td>
+					<td valign="top">
+						Search by country:<br>
+						{% for country in countries %}
+							<a href="/airports/country/{{country.name}}">{{country.name}}</a>,&nbsp;
+						{% endfor %}
+					
+					</td>					
+				</tr>
+			</table>
+		</div>
+		<div class="content tabx">
+					<h1>Dummy text</h1>
+					Click to get back to <a href="/">start page</a>
+		</div>
+	</div>
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/tabs.js"></script>
+
+
+
+
+
 {% endblock %}

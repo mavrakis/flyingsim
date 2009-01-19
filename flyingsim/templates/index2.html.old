@@ -142,39 +142,36 @@ ul.normal li{
 
 /******* /CONTENT *******/
 /******* NEWS *******/
-.content.news h1{
+.content.tab1 h1{
 	background: transparent url(images/news.jpg) no-repeat scroll left top;
 }
-.content.news{
+.content.tab1{
 	display: block;
 }
 /******* /NEWS *******/
 /******* TUTORIALS *******/
-.content.airports h1{
+.content.tab2 h1{
 	background: transparent url(images/tuts.jpg) no-repeat scroll left top;
 }
-.content.airports{
+.content.tab2{
 	display: none;
 }
 /******* /TUTORIALS *******/
 /******* TUTORIALS *******/
-.content.users h1{
+.content.tab3 h1{
 	background: transparent url(images/tuts.jpg) no-repeat scroll left top;
 }
-.content.users{
+.content.tab3{
 	display: none;
 }
 /******* /TUTORIALS *******/
 
 /******* LINKS *******/
-.content.about h1{
+.content.tab4 h1{
 	background: transparent url(images/links.jpg) no-repeat scroll left top;
 }
-.content.about{
+.content.tab4{
 	display: none;
-}
-.content.about a{
-	color: #5f95ef;
 }
 /******* /LINKS *******/    
     
@@ -184,13 +181,13 @@ ul.normal li{
 <ul>
 	<div id="container">
 		<ul class="menu">
-			<li id="flight" class="active">Flight</li>
-			<li id="airports">Airports of the world</li>
-			<li id="users">Top users</li>
-			<li id="about">About</li>
+			<li id="tab1" class="active">Flight</li>
+			<li id="tab2">Airports of the world</li>
+			<li id="tab3">Top users</li>
+			<li id="tab4">About</li>
 		</ul>
 		<span class="clear"></span>
-		<div class="content flight">
+		<div class="content tab1">
 			<h1>Coming soon: Flying Simulator 2009</h1>
 			<img src="http://www.flyingsim.com/img/logo.jpg" height="400">
 
@@ -205,18 +202,18 @@ ul.normal li{
 				<li>All aspects of flying are covered, you would swear that you are on the inside of a plane
 			</ul>
 		</div>
-		<div class="content airports">
+		<div class="content tab2">
 			<h1>Latest airports</h1>
 			Find airports by <a href="/airports/">country</a>, ICAO or IATA code.
 
 		</div>
-		<div class="content users">
+		<div class="content tab3">
 			<h1>Top ranked users</h1>
 			User list
 
 		</div>
 
-		<div class="content about">
+		<div class="content tab4">
 			<h1>About flyingsim.com</h1>
 			<h2>We aim to please</h2>
 			<p>Please note that although we aim to give an experience for a life time, we do not in anyway refund time wasted on this site.</p>
