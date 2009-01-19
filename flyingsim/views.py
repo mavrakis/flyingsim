@@ -52,7 +52,7 @@ def getAllCountries():
 def getAllAirports():
 	#TODO: Memcache
 	airports=[]
-	airportQuery1 = models.Airport.all().order('sequence_nr')
+	airportQuery1 = models.Airport.all().order('sequence_nr').fetch(1000)
 	for qAairport in airportQuery1:
 		airports.append(qAairport)
 	
@@ -78,9 +78,12 @@ def loadAirport(request):
 	return HttpResponse ('<h1>loadAirport</h1>')
 
 def delAirport(request):
-	airportQuery1 = models.Airport.all()
+	airportQuery1 = models.Airport.all().fetch(200)
+	
+	counter = 0
 	for qAairport in airportQuery1:
 		qAairport.delete()
+		counter = counter +1 
 	
 #	airportQuery2 = models.Airport.all().order('sequence_nr').filter('sequence_nr >= ', 1000)
 #	for qAairport in airportQuery2:
@@ -97,7 +100,7 @@ def delAirport(request):
 	
 #	bulkload.main(AirportLoader())
 	
-	return HttpResponse ('<h1>Deleted airports</h1>')
+	return HttpResponse ('<h1>Deleted airports ' + str(counter) + '</h1>')
 
 
 
@@ -124,7 +127,7 @@ def viewAirports(request, queryType="", query=""):
 	logging.error("viewAirports %s %s" ,queryType,query)
 	
 	countries=getAllCountries()
-	
+	logging.error("after getting countries")
 	searchDone='Airports with ' +queryType+ ' '+query
 	
 	if queryType.upper() == "IATA":
@@ -134,25 +137,32 @@ def viewAirports(request, queryType="", query=""):
 	elif queryType.upper() == "NAME":
 		queryStatement = models.Airport.all().search(query)
 	elif queryType.upper() == "COUNTRY":
+		#Too slow to use country reference attribute..
 		#case must match when using filter
 		#countryList = models.Country.all().filter('name = ', query).fetch(limit=1)
-		countryList = models.Country.all().search(query)
 		
-		if countryList.count()!=0:
-			queryStatement = models.Airport.gql("Where country=:1", countryList[0].key())
-		else:
-			logging.info('viewAirports: Could not find country %s . Search fails ' , query)
-			return viewAirportsFailed(request,countries,queryType,query,searchDone,"Could not find country "+query)
+		queryStatement = models.Airport.gql("Where country=:1", query)
+		
+		#countryList = models.Country.all().search(query)	
+		#if countryList.count()!=0:
+		#	queryStatement = models.Airport.gql("Where country=:1", countryList[0].key())
+		#else:
+		#	logging.info('viewAirports: Could not find country %s . Search fails ' , query)
+		#	return viewAirportsFailed(request,countries,queryType,query,searchDone,"Could not find country "+query)
 	elif queryType.upper() == "CLOSETO":
 		searchDone='Airports which are close to the geolocation' +query
-		return viewAirportsCloseTo(request,countries,queryType,query,searchDone)
+		return viewAirportsCloseTo2(request,countries,queryType,query,searchDone)
 	else:
 		return viewAirportsFailed(request,countries,queryType,query,"No search parameters","Please select the search tab above and perform a search")
 	
+	logging.error("Before query run")
 	qAirports = queryStatement.run()
+	logging.error("after query run")
 	airports=[]
 	for qAirport in qAirports:
 		airports.append(qAirport)
+	
+	logging.error("after loop")
 	
 	if not airports:
 		return viewAirportsFailed(request,countries,queryType,query,searchDone,"No airports found for search by " + queryType + " with value " +query)
@@ -165,7 +175,31 @@ def viewAirportsFailed(request,countries,queryType, query, searchDone, reason):
 							  {'airports':[],'countries':countries,'searchDone':searchDone,'reason':reason,
 							    'title':'Flyingsim.com: ' + reason})
 
-def viewAirportsCloseTo(request,countries,queryType, query, searchDone,nrAirports=10):
+#def viewAirportsCloseTo(request,countries,queryType, query, searchDone,nrAirports=10):
+#	""" This method gets all airports, sort through them and filters out far away..Too slow """
+#	
+#	try:
+#		location=query.replace("(","").replace(")","")
+#		firstToken = location.split(",")[0]
+#		lastToken=location.split(",")[1]
+#		#logging.error("Tokens %s %s", firstToken,lastToken )
+#		point=GeoPt(float(firstToken),float(lastToken))
+#	except:
+#		logging.error("Failed to convert %s", location )
+#		return viewAirportsFailed(request,countries,queryType,query,searchDone,"Failed to convert location" +query+" to valid point")	
+#	
+#	airports=getAllAirports()
+#	
+#	airports.sort(cmp=lambda x,y: models.Airport.closestToPointSimple(x,y,point))
+#	closeAirports=airports[0:50]
+#	closeAirports.sort(cmp=lambda x,y: models.Airport.closestToPointExact(x,y,point))
+#	closeAirports=closeAirports[0:nrAirports]
+#	
+#	return render_to_response('viewAirport.html',
+#							  {'pointCloseTo':point,'airports':closeAirports,'countries':countries,'searchDone':searchDone,
+#							    'title':'Flyingsim.com: ' + searchDone})
+
+def viewAirportsCloseTo2(request,countries,queryType, query, searchDone,nrAirports=10):
 	try:
 		location=query.replace("(","").replace(")","")
 		firstToken = location.split(",")[0]
@@ -176,16 +210,33 @@ def viewAirportsCloseTo(request,countries,queryType, query, searchDone,nrAirport
 		logging.error("Failed to convert %s", location )
 		return viewAirportsFailed(request,countries,queryType,query,searchDone,"Failed to convert location" +query+" to valid point")	
 	
-	airports=getAllAirports()
+	pointLat= int(point.lat)
+	pointLon= int(point.lon)
+	maxLat=int(pointLat+5)
+	minLat=int(pointLat-5)
+	maxLon=int(pointLon+5)
+	minLon=int(pointLon-5)
+	logging.debug("First searcg WHERE pointLon < %s AND pointLon > %s",maxLon,minLon)
+
+	airportQuery1 = models.Airport.gql("Where pointLat < :1 AND pointLat > :2 ",maxLat,minLat).fetch(1000)
 	
-	airports.sort(cmp=lambda x,y: models.Airport.closestToPointSimple(x,y,point))
-	closeAirports=airports[0:50]
+	airports=[]
+	for qAirport in airportQuery1:
+		if qAirport.pointLon < maxLon and qAirport.pointLon > minLon:
+		  airports.append(qAirport)
+	
+	logging.error("After toArray and Lat filtering length=%s", len(airports))
+	
+	airports.sort(cmp=lambda x,y: models.Airport.closestToPointSimple(x,y,pointLat,pointLon))
+	closeAirports=airports[0:nrAirports]
 	closeAirports.sort(cmp=lambda x,y: models.Airport.closestToPointExact(x,y,point))
 	closeAirports=closeAirports[0:nrAirports]
 	
 	return render_to_response('viewAirport.html',
 							  {'pointCloseTo':point,'airports':closeAirports,'countries':countries,'searchDone':searchDone,
 							    'title':'Flyingsim.com: ' + searchDone})
+	
+	
 
 
 def doLogin(request):
@@ -264,31 +315,7 @@ def getPossibleAirportEnd(request):
 	return HttpResponse (data)
 
 
-def testData(request):
-	models.Airport(name="Stavanger",icao_id="SVG",point=GeoPt(70.10,71.20)).put()
-	models.Airport(name="Oslo",icao_id="OSL",point=GeoPt(40.10,41.20)).put()
-	return HttpResponse ('<h1>Test data added</h1>')
 
 
-
-
-
-
-
-def post(request):
-	form = NewFlightForm(request.POST)
-	if not form.is_valid():
-			return render_to_response (
-				'index.html',
-				{'form':form})
-	
-	flight=form.save(commit=False)
-	flight.user=users.get_current_user()
-	flight.put()
-	logging.error("Put result %s", str(flight.is_saved()))
-	return HttpResponseRedirect('/')
-	
-	 
-#return HttpResponse ('Hello flyingsim')
 
 

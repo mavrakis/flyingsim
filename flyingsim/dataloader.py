@@ -71,10 +71,15 @@ class AirportLoader(bulkload.Loader):
            
 
         #logging.error ("country %s " ,countryObj[0]) 
-        entity['country']=countryObj.key()
+        
+        #TEMP removed to check performance
+        #entity['country']=countryObj.key()
     
     
-    del entity['country_code']    
+    del entity['country_code']
+    point=entity['point']
+    entity['pointLat']=int(point.lat)
+    entity['pointLon']=int(point.lon)   
     entity = search.SearchableEntity(entity)  
     #required in order to retrieve more than 1000 elements
     entity['sequence_nr']=self.sequence_nr
