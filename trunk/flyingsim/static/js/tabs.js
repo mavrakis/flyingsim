@@ -6,56 +6,57 @@
 /***************************/
 
 $(document).ready(function(){
-	$(".menu > li").click(function(e){
+	$(".menu > li.fade").click(function(e){
+		//alert(e.target.id);
 		switch(e.target.id){
-			case "flight":
+			case "tab1":
 				//change status & style menu
-				$("#flight").addClass("active");
-				$("#airports").removeClass("active");
-				$("#about").removeClass("active");
-				$("#users").removeClass("active");
+				$("#tab1").addClass("active");
+				$("#tab2").removeClass("active");
+				$("#tab4").removeClass("active");
+				$("#tab3").removeClass("active");
 				//display selected division, hide others
-				$("div.flight").fadeIn();
-				$("div.airports").css("display", "none");
-				$("div.about").css("display", "none");
-				$("div.users").css("display", "none");
+				$("div.tab1").fadeIn();
+				$("div.tab2").css("display", "none");
+				$("div.tab4").css("display", "none");
+				$("div.tab3").css("display", "none");
 			break;
-			case "airports":
+			case "tab2":
 				//change status & style menu
-				$("#flight").removeClass("active");
-				$("#airports").addClass("active");
-				$("#about").removeClass("active");
-				$("#users").removeClass("active");
+				$("#tab1").removeClass("active");
+				$("#tab2").addClass("active");
+				$("#tab4").removeClass("active");
+				$("#tab3").removeClass("active");
 				//display selected division, hide others
-				$("div.airports").fadeIn();
-				$("div.flight").css("display", "none");
-				$("div.about").css("display", "none");
-				$("div.users").css("display", "none");
+				$("div.tab2").fadeIn();
+				$("div.tab1").css("display", "none");
+				$("div.tab4").css("display", "none");
+				$("div.tab3").css("display", "none");
 			break;
-			case "users":
+			case "tab3":
 				//change status & style menu
-				$("#flight").removeClass("active");
-				$("#users").addClass("active");
-				$("#airports").removeClass("active");
-				$("#about").removeClass("active");
+				$("#tab1").removeClass("active");
+				$("#tab3").addClass("active");
+				$("#tab2").removeClass("active");
+				$("#tab4").removeClass("active");
 				//display selected division, hide others
-				$("div.users").fadeIn();
-				$("div.flight").css("display", "none");
-				$("div.about").css("display", "none");
-				$("div.airports").css("display", "none");
+				$("div.tab3").fadeIn();
+				$("div.tab1").css("display", "none");
+				$("div.tab4").css("display", "none");
+				$("div.tab2").css("display", "none");
 			break;			
 			
-			case "about":
+			case "tab4":
 				//change status & style menu
-				$("#flight").removeClass("active");
-				$("#airports").removeClass("active");
-				$("#about").addClass("active");
-				$("#users").removeClass("active");
+				$("#tab1").removeClass("active");
+				$("#tab2").removeClass("active");
+				$("#tab4").addClass("active");
+				$("#tab3").removeClass("active");
 				//display selected division, hide others
-				$("div.about").fadeIn();
-				$("div.flight").css("display", "none");
-				$("div.airports").css("display", "none");
-				$("div.users").css("display", "none");
+				$("div.tab4").fadeIn();
+				$("div.tab1").css("display", "none");
+				$("div.tab2").css("display", "none");
+				$("div.tab3").css("display", "none");
 			break;
 		}
 		//alert(e.target.id);

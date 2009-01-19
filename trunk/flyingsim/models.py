@@ -1,7 +1,7 @@
 from appengine_django.models import BaseModel
 from google.appengine.ext import db
 from google.appengine.ext.db import GeoPt
-
+from google.appengine.ext.search import SearchableModel
 
 #Python imports
 import math
@@ -19,13 +19,21 @@ class Waypoint(BaseModel, JSONExportable):
 	"""" Representing a waypoint in a flight plan"""
 	wpt_id = db.StringProperty(required=True)
 	point = db.GeoPtProperty(required=True)
+
+class Country(SearchableModel, JSONExportable):
+	name=db.StringProperty(required=True)
+	code=db.StringProperty()
+	region=db.StringProperty()
 	
-class Airport(BaseModel, JSONExportable):
+	
+class Airport(SearchableModel, JSONExportable):
 	""" Representing an airport of the world"""
-	name = db.StringProperty(required=True)
+	sequence_nr=db.IntegerProperty(required=True)
 	icao_id = db.StringProperty(required=True)
+	name = db.StringProperty(required=True)
 	iata_id = db.StringProperty()
-	country=db.StringProperty()
+	#country=db.StringProperty()
+	country=db.ReferenceProperty(Country)
 	point = db.GeoPtProperty(required=True)
 	def getJSONFields(self):
 		ret = super(Airport, self).getJSONFields()
@@ -40,7 +48,39 @@ class Airport(BaseModel, JSONExportable):
 		query = Airport.gql("Where icao_id!=:1 ORDER BY icao_id DESC", airportFromICAO)
 		airports = query.run()
 		return airports
-	findAvailableAirportsFrom = staticmethod(findAvailableAirportsFrom)		
+	findAvailableAirportsFrom = staticmethod(findAvailableAirportsFrom)
+	
+	def closestToPointExact(airportA, airportB, point):
+		distSumA =GeoUtils.distanceBetween(airportA.point,point)
+		airportA.distanceTo=distSumA
+		distSumB= GeoUtils.distanceBetween(airportB.point,point)
+		airportB.distanceTo=distSumB
+		
+		if distSumA>distSumB:
+			return 1
+		elif distSumA==distSumB:
+			return 0
+		else:
+			return -1
+	closestToPointExact=staticmethod(closestToPointExact)
+
+	def closestToPointSimple(airportA, airportB, point):
+		distLatA = math.fabs(max(airportA.point.lat, point.lat) - min(airportA.point.lat, point.lat))
+		distLonA = math.fabs(max(airportA.point.lon, point.lon) - min(airportA.point.lon, point.lon))
+		distSumA= distLatA+distLonA
+		
+		distLatB = math.fabs(max(airportB.point.lat, point.lat) - min(airportB.point.lat, point.lat))
+		distLonB = math.fabs(max(airportB.point.lon, point.lon) - min(airportB.point.lon, point.lon))
+		distSumB= distLatB+distLonB
+		
+		if distSumA>distSumB:
+			return 1
+		elif distSumA==distSumB:
+			return 0
+		else:
+			return -1
+	closestToPointSimple=staticmethod(closestToPointSimple)
+				
 	
 class Airway(BaseModel, JSONExportable):
 	name = db.StringProperty()	

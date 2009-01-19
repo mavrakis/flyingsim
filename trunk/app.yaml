@@ -1,5 +1,5 @@
 application: flyingsim
-version: 1
+version: 2
 runtime: python
 api_version: 1
 
@@ -16,6 +16,13 @@ handlers:
 - url: /js
   static_dir: flyingsim/static/js
 
+- url: /favicon.ico
+  static_files: flyingsim/static/img/favicon.ico
+  upload: flyingsim/static/img/favicon.ico
+  
+- url: /crossdomain.xml
+  static_files: flyingsim/static/flash/crossdomain.xml
+  upload: flyingsim/static/flash/crossdomain.xml
 
 - url: /.*
   script: main.py
