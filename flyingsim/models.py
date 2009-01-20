@@ -24,7 +24,8 @@ class Country(SearchableModel, JSONExportable):
 	name=db.StringProperty(required=True)
 	code=db.StringProperty()
 	region=db.StringProperty()
-	
+	#nrOfAirports = db.IntegerProperty()
+	#nrOfAirportsWithConncetions = db.IntegerProperty()
 	
 class Airport(SearchableModel, JSONExportable):
 	""" Representing an airport of the world"""
@@ -53,7 +54,7 @@ class Airport(SearchableModel, JSONExportable):
 	findAvailableAirportsFrom = staticmethod(findAvailableAirportsFrom)
 	
 	def closestToPointExact(airportA, airportB, point):
-		""" Exact operator which calculates distance to point from airport and compares meters """
+		""" Exact comparisson operator which calculates distance to point from airport and compares meters """
 		if not hasattr(airportA,"distanceTo"):
 		  distSumA =GeoUtils.distanceBetween(airportA.point,point)
 		  airportA.distanceTo=distSumA
@@ -90,6 +91,11 @@ class Airport(SearchableModel, JSONExportable):
 			return -1
 	closestToPointSimple=staticmethod(closestToPointSimple)
 				
+	
+class AirportRoute(BaseModel,JSONExportable):
+	sequence_nr = db.IntegerProperty(required=True)
+	from_icao_id = db.StringProperty(required=True)
+	to_airport = db.ReferenceProperty(Airport)
 	
 class Airway(BaseModel, JSONExportable):
 	name = db.StringProperty()	
@@ -233,5 +239,6 @@ class Flight(BaseModel, JSONExportable):
 		#echo "New location " . $pointPlane->toString();
 		
 		self.put()
+		
 
 	

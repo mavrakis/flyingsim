@@ -24,5 +24,18 @@ handlers:
   static_files: flyingsim/static/flash/crossdomain.xml
   upload: flyingsim/static/flash/crossdomain.xml
 
+- url: /sitemap.txt
+  static_files: flyingsim/static/sitemap.txt
+  upload: flyingsim/static/sitemap.txt
+
+- url: /robots.txt
+  static_files: flyingsim/static/robots.txt
+  upload: flyingsim/static/robots.txt
+
+- url: /google6dd5946f87217236.html
+  static_files: flyingsim/static/google6dd5946f87217236.html
+  upload: flyingsim/static/google6dd5946f87217236.html
+  
+
 - url: /.*
   script: main.py
