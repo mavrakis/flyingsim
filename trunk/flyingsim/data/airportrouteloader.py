@@ -32,7 +32,7 @@ class AirportRouteLoader(bulkload.Loader):
     
     
     bulkload.Loader.__init__(self, 'AirportRoute',
-                         [('from_icao_id', str),
+                         [('icao_from', str),
                           ('to_icao_id',str),
                           ])
 
@@ -50,7 +50,7 @@ class AirportRouteLoader(bulkload.Loader):
                 logging.error("Got OS error")
 
         #Add the key
-        entity['to_airport']=airportObj.key()
+        entity['airport_to']=airportObj.key()
     
     del entity['to_icao_id']
     entity['sequence_nr']=self.sequence_nr
