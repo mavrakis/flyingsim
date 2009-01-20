@@ -8,7 +8,7 @@ from google.appengine.api import datastore
 from google.appengine.api.datastore_errors import NeedIndexError 
 
 import logging
-import models
+from flyingsim import models
 
 class AirportLoader(bulkload.Loader):
   def __init__(self):

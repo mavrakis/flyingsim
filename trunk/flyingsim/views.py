@@ -9,7 +9,8 @@ from google.appengine.api import memcache
 from django.core import serializers
 
 from google.appengine.ext import bulkload
-from flyingsim.dataloader import AirportLoader
+from flyingsim.data.airportloader import AirportLoader
+from flyingsim.data.airportrouteloader import AirportRouteLoader
 
 from flyingsim.utils.json import json_encode
 
@@ -18,14 +19,7 @@ import logging
 import models
 
 
-
-#Define form class
-#class NewFlightForm(djangoforms.ModelForm):
-#	class Meta:
-#		model=models.Flight
-#		exclude=['timeStart','user']
-
-
+### MAIN PAGES ### 
 def index(request):
 	#return HttpResponse ('<h1>Flyingsim: Coming in 2009</h1>')
 	countries=getAllCountries()
@@ -35,6 +29,11 @@ def index(request):
 	#	{'flights':query.run(),
 	#	 'form':NewFlightForm()}
 
+def viewFlight(request):
+	return render_to_response ('viewFlight.html',)	
+
+
+### CACHE METHODS ###
 def getAllCountries():
 	countries = memcache.get("countries")
 	if countries is not None:
@@ -72,19 +71,7 @@ def getAllAirports():
 	return airports
 
 
-def loadAirport(request):
-	bulkload.main(AirportLoader())
-	
-	return HttpResponse ('<h1>loadAirport</h1>')
 
-def delAirport(request):
-	airportQuery1 = models.Airport.all().fetch(200)
-	
-	counter = 0
-	for qAairport in airportQuery1:
-		qAairport.delete()
-		counter = counter +1 
-	
 #	airportQuery2 = models.Airport.all().order('sequence_nr').filter('sequence_nr >= ', 1000)
 #	for qAairport in airportQuery2:
 #		airports.append(qAairport)
@@ -104,8 +91,6 @@ def delAirport(request):
 
 
 
-def viewFlight(request):
-	return render_to_response ('viewFlight.html',)	
 
 def searchAirports(request):
 	""" Method used for redirecting POST queries to REST based GET URLS """
@@ -119,7 +104,6 @@ def searchAirports(request):
 		query=queryDict.get('query','empty')
 	
 	logging.debug("searchAirports %s %s" ,searchBy,query)
-	
 	return HttpResponseRedirect('/airports/'+searchBy+'/'+query+'/')
 		
 
@@ -238,17 +222,16 @@ def viewAirportsCloseTo2(request,countries,queryType, query, searchDone,nrAirpor
 	
 	
 
-
+### JSON API METHODS ###
 def doLogin(request):
+	""" Method for logging in. Should return a json-encoded sessionId """
 	flight =models.Flight.gql("ORDER by sessionId DESC").get()
 	if flight==None:
 		sessionId=1
 	else:
 		sessionId=flight.sessionId+1
-	
 		
 	data = json_encode({'sessionId':sessionId})
-	
 	return HttpResponse(data)
 
 def doStartFlight(request):
@@ -315,6 +298,23 @@ def getPossibleAirportEnd(request):
 	return HttpResponse (data)
 
 
+# LOAD/DEL METHODS
+def loadAirport(request):
+	bulkload.main(AirportLoader())
+	return HttpResponse ('<h1>loadAirport</h1>')
+
+def delAirport(request):
+	airportQuery1 = models.Airport.all().fetch(200)
+	
+	counter = 0
+	for qAairport in airportQuery1:
+		qAairport.delete()
+		counter = counter +1 
+	
+
+def loadAirportRoute(request):
+	bulkload.main(AirportRouteLoader())
+	return HttpResponse ('<h1>loadAirportRoute</h1>')
 
 
 
