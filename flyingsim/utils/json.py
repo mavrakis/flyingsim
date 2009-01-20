@@ -76,6 +76,7 @@ def json_encode(data):
     def _modelAppengine(data):
         ret = {}
         fields = data._entity #_entity keeps track of the fields in the model
+        #del fields['__searchable_text_index']
         for k in fields:
             ret[k] = _any(getattr(data, k))
         return ret
@@ -91,6 +92,8 @@ def json_encode(data):
     
     def _dict(data):
         ret = {}
+        if data.has_key('__searchable_text_index'):
+            del data['__searchable_text_index']
         for k,v in data.items():
             ret[k] = _any(v)
         return ret

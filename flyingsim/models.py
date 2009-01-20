@@ -15,10 +15,7 @@ from flyingsim.utils.json import json_encode
 
 # Create your models here.
 
-class Waypoint(BaseModel, JSONExportable):
-	"""" Representing a waypoint in a flight plan"""
-	wpt_id = db.StringProperty(required=True)
-	point = db.GeoPtProperty(required=True)
+
 
 class Country(SearchableModel, JSONExportable):
 	name=db.StringProperty(required=True)
@@ -39,7 +36,8 @@ class Airport(SearchableModel, JSONExportable):
 	pointLat=db.IntegerProperty()
 	pointLon=db.IntegerProperty()
 	def getJSONFields(self):
-		ret = super(Airport, self).getJSONFields()
+		#ret = super(Airport, self).getJSONFields()
+		ret = {}
 		ret['latitude'] = self.point.lat
 		ret['longitude'] = self.point.lon
 		ret['icaoID'] = self.icao_id
@@ -93,14 +91,11 @@ class Airport(SearchableModel, JSONExportable):
 				
 	
 class AirportRoute(BaseModel,JSONExportable):
+	""" Which airports are connected """
 	sequence_nr = db.IntegerProperty(required=True)
-	from_icao_id = db.StringProperty(required=True)
-	to_airport = db.ReferenceProperty(Airport)
-	
-class Airway(BaseModel, JSONExportable):
-	name = db.StringProperty()	
-	pointStart = db.GeoPtProperty(required=True)
-	pointEnd = db.GeoPtProperty(required=True)
+	icao_from = db.StringProperty(required=True)
+	airport_to = db.ReferenceProperty(Airport)
+#areAirportsConnected	
 
 class Plane(BaseModel, JSONExportable):
 	name = db.StringProperty(required=True)
@@ -111,35 +106,35 @@ class Plane(BaseModel, JSONExportable):
 
 class FlightState(BaseModel, JSONExportable):
 	name = db.StringProperty(required=True)
-	isStartState = db.BooleanProperty()
+	is_start_state = db.BooleanProperty()
 	description = db.TextProperty(required=True)
 
 
-class Flight(BaseModel, JSONExportable):
+class FlightData(BaseModel, JSONExportable):
 	#General flight information
 	sessionId = db.IntegerProperty()
-	description = db.StringProperty()
-	airportFrom = db.ReferenceProperty(Airport, collection_name="flight_airport_from_set")
-	airportTo = db.ReferenceProperty(Airport, collection_name="flight_airport_to_set")
-	plane = db.ReferenceProperty(Plane)
-	timeStart = db.DateTimeProperty(auto_now_add=True)
-	completed = db.BooleanProperty(default=False)
-	timeEnd = db.DateTimeProperty()
 	user = db.UserProperty()
-	#Information used during flight
-	airways = None#db.ListProperty(Airway,default=None)
-	waypoints = None#db.ListProperty(GeoPt,default=None)
-	currentPoint = db.GeoPtProperty()
-	headingRadians = db.FloatProperty(default=0.0)
+	airport_from = db.ReferenceProperty(Airport, collection_name="flight_airport_from_set")
+	airport_from = db.ReferenceProperty(Airport, collection_name="flight_airport_to_set")
+	current_point = db.GeoPtProperty()
+	heading_radians = db.FloatProperty(default=0.0)
 	speed = db.FloatProperty(default=3000.0)
 	state = db.ReferenceProperty(FlightState)
-	targetId = db.TextProperty()
-	targetPoint = db.GeoPtProperty()
-	timestampUpdatedServer = db.DateTimeProperty()
-	timestampPolledClient = db.DateTimeProperty()
+	target_point = db.GeoPtProperty()
+	timestamp_updated_server = db.DateTimeProperty()
+	completed = db.BooleanProperty(default=False)
 
+	#Information used during flight
+	#airways = None#db.ListProperty(Airway,default=None)
+	#waypoints = None#db.ListProperty(GeoPt,default=None)
+	#plane = db.ReferenceProperty(Plane)
+	#time_start = db.DateTimeProperty(auto_now_add=True)
+	#
+	#time_end = db.DateTimeProperty()
+	
 	def getJSONFields(self):
-		ret = super(Flight, self).getJSONFields()
+		#ret = super(Flight, self).getJSONFields()
+		ret = {}
 		ret['currentLat'] = self.currentPoint.lat
 		ret['currentLng'] = self.currentPoint.lon
 		waypoints = [{'latitude':40.0, 'longitude':50.0}]
@@ -180,9 +175,8 @@ class Flight(BaseModel, JSONExportable):
 
 
 	def updateFlight(self):
-		timestampLastUpdated = self.timestampUpdatedServer
+		timestampLastUpdated = self.timestamp_updated_server
 		timestampNow = datetime.datetime.now()
-		
 		
 		timeDeltaSinceLastUpdate = timestampNow - timestampLastUpdated;
 		timeSinceLastUpdate = timeDeltaSinceLastUpdate.seconds + timeDeltaSinceLastUpdate.microseconds / 1000000.0
@@ -190,11 +184,10 @@ class Flight(BaseModel, JSONExportable):
 		
 		speedMS = self.speed
 		
-		pointTarget = self.targetPoint
-		pointPlane = self.currentPoint
+		pointTarget = self.target_point
+		pointPlane = self.current_point
 		
 		count = 0;
-		
 		#While loop which runs if we're going to pass the current (potentially many) waypoint/target
 		while GeoUtils.distanceBetween(pointTarget, pointPlane) < timeSinceLastUpdate * speedMS:
 			count = count + 1
@@ -210,7 +203,7 @@ class Flight(BaseModel, JSONExportable):
 			pointPlane = planeTarget
 			
 			#TODO: update target completion
-			waypointNext = self.getWaypointAfter(self.targetId)
+			waypointNext = self.getWaypointAfter(self.target_id)
 			if waypointNext == None:
 				logging.error ("No next waypoint. TODOHANDLE")
 				return
@@ -222,23 +215,32 @@ class Flight(BaseModel, JSONExportable):
 			#echo "timeSinceLastUpdate=$timeSinceLastUpdate New point location=".$pointPlane->toString(). " New target ".$pointTarget->toString() . "Distance=".$pointTarget->distanceFrom($pointPlane);
 			#TODO: Check if flight complete/state changed
 		
-		
 		#end of while loop means we will not pass current waypoint/target
-		
 		headingRad = GeoUtils.headingRadians(pointPlane, pointTarget)
 		metersTravelled = timeSinceLastUpdate * speedMS;
 		logging.error ("headingRad=%s meters=%s", headingRad, metersTravelled)
 		pointPlaneNew = GeoUtils.newPointInHeadingAndDistance(pointPlane, headingRad, metersTravelled)
 		#Update FlightData
-		self.currentPoint = pointPlaneNew
+		self.current_point = pointPlaneNew
 		
 		logging.error ("old_loc=%s new_loc=%s distance=%s", pointPlane, pointPlaneNew, distanceBetween(pointPlane, pointPlaneNew))
 		
-		self.timestampUpdatedServer = timestampNow
-		self.headingRadians = GeoUtils.headingRadians(pointPlaneNew, pointTarget)
+		self.timestamp_updated_server = timestampNow
+		self.heading_radians = GeoUtils.headingRadians(pointPlaneNew, pointTarget)
 		#echo "New location " . $pointPlane->toString();
 		
 		self.put()
 		
 
+### OLD MODEL CLASSES ###
+
+#class Waypoint(BaseModel, JSONExportable):
+#	"""" Representing a waypoint in a flight plan"""
+#	wpt_id = db.StringProperty(required=True)
+#	point = db.GeoPtProperty(required=True)
+
+#class Airway(BaseModel, JSONExportable):
+#	name = db.StringProperty()	
+#	pointStart = db.GeoPtProperty(required=True)
+#	pointEnd = db.GeoPtProperty(required=True)
 	

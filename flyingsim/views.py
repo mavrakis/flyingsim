@@ -13,6 +13,7 @@ from flyingsim.data.airportloader import AirportLoader
 from flyingsim.data.airportrouteloader import AirportRouteLoader
 
 from flyingsim.utils.json import json_encode
+from flyingsim.utils.pythonutils import memoize,memoize_params
 
 import datetime
 import logging
@@ -33,20 +34,17 @@ def viewFlight(request):
 	return render_to_response ('viewFlight.html',)	
 
 
-### CACHE METHODS ###
+### CACHING OF MASTER DATA ###
+@memoize('getAllCountries()')
 def getAllCountries():
-	countries = memcache.get("countries")
-	if countries is not None:
-		#logging.error("Getting countries from memcache")
-		return countries
-	else:
-		countryQuery = models.Country.all().order('name')
-		countries=[]
-		for qCountry in countryQuery:
-			countries.append(qCountry)
-		logging.error("Adding countries to memcache")
-		memcache.add("countries", countries)
-        return countries
+	return [x for x in models.Country.all().order('name')]
+
+@memoize_params('getAirportByCountry(%s)')
+def getAirportByCountry(country):
+		return [x for x in models.Airport.gql("Where country=:1", country)]
+	
+	
+	
 
 def getAllAirports():
 	#TODO: Memcache
@@ -273,27 +271,38 @@ def getFlightDataOther(request):
 def getFlightRoute(request):
 	queryDict = request.GET
 	sessionId=queryDict.get('sessionId')
-	airportStart=queryDict.get('airportStart')
-	airportEnd=queryDict.get('airportEnd')	
+	airportStart=queryDict.get('icao_from')
+	airportEnd=queryDict.get('icao_to')	
+	#TODO: Check if airports are connected possible
 	
-	flight = models.Flight.findFlight(airportStart,airportEnd)
+	#flight = models.Flight.findFlight(airportStart,airportEnd)
 	flight.put()
 	data=json_encode(flight)
 	return HttpResponse (data)
+
+
+@memoize('getPossibleCountryStart')
+def getPossibleCountryStart(request):
+	""" Get the Country the user can select from """
+	countries = getAllCountries()
+	data=json_encode(countries)
+	return HttpResponse (data)
 	
 def getPossibleAirportStart(request):
-	query = models.Airport.gql("ORDER BY name DESC");
-	airports=query.run()
-	#airports=models.Airport.objects.all()
-	#data = simplejson.dumps(flights.objects.all)
+	""" Get the Possible Airport the user can select from, given a country """
+	queryDict = request.GET
+	countryName=queryDict.get('country')
+	#TODO: Should we filter out only those with connections?
+	airports = getAirportByCountry(countryName)
 	data=json_encode(airports)
-
 	return HttpResponse (data)
 
 def getPossibleAirportEnd(request):
+	""" Which airports are reachable. Requires input icao_from """
 	queryDict = request.GET
-	airportStart=queryDict.get('airportStart')
-	airports=models.Airport.findAvailableAirportsFrom(airportStart)
+	icao_from=queryDict.get('icao_from')
+	airports=[x.airport_to for x in models.AirportRoute.gql("Where icao_from=:1", icao_from)]
+	#=models.AirportRoute.findAvailableAirportsFrom(airportStart)
 	data=json_encode(airports)
 	return HttpResponse (data)
 
@@ -305,17 +314,22 @@ def loadAirport(request):
 
 def delAirport(request):
 	airportQuery1 = models.Airport.all().fetch(200)
-	
 	counter = 0
 	for qAairport in airportQuery1:
 		qAairport.delete()
 		counter = counter +1 
-	
+	return HttpResponse ('<h1>delAirport' + str(counter) + '</h1>')	
 
 def loadAirportRoute(request):
 	bulkload.main(AirportRouteLoader())
 	return HttpResponse ('<h1>loadAirportRoute</h1>')
 
-
+def delAirportRoute(request):
+	airportQuery1 = models.AirportRoute.all().fetch(200)
+	counter = 0
+	for qAairport in airportQuery1:
+		qAairport.delete()
+		counter = counter +1 
+	return HttpResponse ('<h1>delAirportRoute' + str(counter) + '</h1>')	
 
 
