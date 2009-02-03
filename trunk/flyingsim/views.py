@@ -65,7 +65,7 @@ def getAllAirports():
 	#for qAairport in airportQuery4:
 	#	airports.append(qAairport)	
 
-	logging.error('Got %s airports ', len(airports) )
+	logging.debug('Got %s airports ', len(airports) )
 	return airports
 
 
@@ -84,8 +84,7 @@ def getAllAirports():
 #		airports.append(qAairport)	
 	
 #	bulkload.main(AirportLoader())
-	
-	return HttpResponse ('<h1>Deleted airports ' + str(counter) + '</h1>')
+
 
 
 
@@ -207,7 +206,7 @@ def viewAirportsCloseTo2(request,countries,queryType, query, searchDone,nrAirpor
 		if qAirport.pointLon < maxLon and qAirport.pointLon > minLon:
 		  airports.append(qAirport)
 	
-	logging.error("After toArray and Lat filtering length=%s", len(airports))
+	logging.debug("After toArray and Lat filtering length=%s", len(airports))
 	
 	airports.sort(cmp=lambda x,y: models.Airport.closestToPointSimple(x,y,pointLat,pointLon))
 	closeAirports=airports[0:nrAirports]
@@ -246,7 +245,7 @@ def doStartFlight(request):
 	flight.put()
 	
 	data = json_encode(flight)
-	logging.error("doStartFlight %s" , data) 	
+	logging.debug("doStartFlight %s" , data) 	
 	return HttpResponse (data)
 
 def getFlightData(request):
@@ -262,7 +261,7 @@ def getFlightData(request):
 	flight.put()
 	
 	data = json_encode(flight)
-	logging.error("getFlightData %s" , data) 
+	logging.debug("getFlightData %s" , data) 
 	return HttpResponse (data)
 	
 def getFlightDataOther(request):
