@@ -148,8 +148,13 @@ def viewAirports(request, queryType="", query=""):
 	if not airports:
 		return viewAirportsFailed(request,countries,queryType,query,searchDone,"No airports found for search by " + queryType + " with value " +query)
 	
+	bSingleAirport=False
+	if len(airports)==1:
+	   bSingleAirport= True
+	
+	
 	return render_to_response('viewAirport.html',
-							  {'airports':airports,'countries':countries,'searchDone':searchDone, 'title':'Flyingsim.com: ' + searchDone})
+							  {'airports':airports,'bSingleAirport':bSingleAirport,'countries':countries,'searchDone':searchDone, 'title':'Flyingsim.com: ' + searchDone})
 
 def viewAirportsFailed(request,countries,queryType, query, searchDone, reason):
 	return render_to_response('viewAirport.html',

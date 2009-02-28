@@ -166,7 +166,13 @@
 					<tr>
 					{% endif %}
 					<td>
-					<h3>Airport name: {{ airport.name }}</h3>
+					<h3>
+					{% if not bSingleAirport %}
+						<a href="/airports/iata/{{airport.iata_id}}" title="More information including photos for {{ airport.name }} airport ({{ airport.iata_id }}), {{ airport.country }}" >Airport name: {{ airport.name }}</a>
+					{%else%}
+						Airport name: {{ airport.name }}
+					{%endif%}
+					</h3>
 					
 					The following information is known for the airport {{ airport.name }}:
 					<table class="outlined">
@@ -191,10 +197,31 @@
 				<h3>Sorry, we could not find any airports matching your query. Message is "{{reason}}"</h3>
 				<p>Please try to search again using the search tab above.
 			{% endif %}
-					
-		
-			
-			
+				
+			{% if bSingleAirport%}
+				{% for airport in airports %}
+				<h2>Photos from flickr taken close to {{ airport.name }}</h2>
+				<div id="airportPhotos"></div>
+				  <script  type="text/javascript">
+				  $(document).ready(function(){
+				    $.getJSON("http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=fca79ade9d154d976a7f68bca5753fbd&lat={{ airport.point.lat }}&lon={{ airport.point.lon }}&radius=5&min_taken_date=2008-09-01+00:00:00&format=json&jsoncallback=?",
+				        function(data){
+				          $.each(data.photos.photo, function(i,photo){
+				            urlImg="http://farm" + photo.farm + ".static.flickr.com/" + photo.server + "/"+ photo.id+"_"+photo.secret+"_m.jpg";
+				            urlHref="http://www.flickr.com/photos/" + photo.owner +"/" + photo.id;
+				            img = $("<img/>").attr("src", urlImg);
+				            a = $("<a/>").attr("href",urlHref);
+							a.append(img);
+				
+				            a.appendTo("#airportPhotos");
+							//$("<a>").attr("href",urlHref).
+				            //if ( i == 3 ) return false;
+				          });
+				        });
+				  });
+  				</script>
+  				{% endfor %}
+			{% endif %}
 		</div>
 		<div class="content tab2">
 			<h1>Search the airports of the world</h1>
@@ -269,8 +296,7 @@
 					Click to get back to <a href="/">start page</a>
 		</div>
 	</div>
-	<script type="text/javascript" src="/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/js/tabs.js"></script>
+
 
 
 
