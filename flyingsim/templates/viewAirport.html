@@ -3,7 +3,9 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <meta name="description" content="Flying Simulator 2009. Search for {{searchDone}} ">
     <meta name="keywords" content="airport,icao,iata,flying,flight, flying simulator, flight simulator">
+  
 
+  
     <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAA2aSbrhUh764ZHn_76JVUPxSwuHHOtAMO0n6VbWCDTN-_howDVhQ2IHOGR8eQtAaDX_MHS90p1nDfIA"
       type="text/javascript"></script>
       <script type="text/javascript"
@@ -126,6 +128,19 @@
     //]]>
     </script>
 {% endblock %}
+
+{% block head_jquery %}
+{{ block.super }}
+  <script src="/js/jquery.galleriffic.js"></script>
+  <link rel="stylesheet" href="/css/galleriffic.css" type="text/css" />
+  <link rel="stylesheet" href="/css/basic_galleriffic.css" type="text/css" />
+  
+  		<script type="text/javascript">
+			document.write("<style type='text/css'>div.navigation_gallery{width:300px;float: left;}div.content_gallery{display:block;}</style>");
+		</script>
+{% endblock %}
+
+
 {% block body_attrs %}onload="load()" onunload="GUnload()"{{ block.super }}{% endblock %}>
 
 {% block main_content %}
@@ -166,13 +181,16 @@
 					<tr>
 					{% endif %}
 					<td>
-					<h3>
+					
 					{% if not bSingleAirport %}
+						<h3>
 						<a href="/airports/iata/{{airport.iata_id}}" title="More information including photos for {{ airport.name }} airport ({{ airport.iata_id }}), {{ airport.country }}" >Airport name: {{ airport.name }}</a>
+						</h3>
+						
 					{%else%}
-						Airport name: {{ airport.name }}
+						<h2>Airport name: {{ airport.name }}</h2>
 					{%endif%}
-					</h3>
+					
 					
 					The following information is known for the airport {{ airport.name }}:
 					<table class="outlined">
@@ -180,7 +198,7 @@
 						<!--  a href="/airports/closeto/({{ airport.point.lat }},{{ airport.point.lon }})/" alt="Click here to view all airports close to this location"-->
 						({{ airport.point.lat }},{{ airport.point.lon }})
 						</td></tr>
-						<tr><td>country:</td><td>{{ airport.country }}</td></tr>
+						<tr><td>country:</td><td><a href="/airports/country/{{ airport.country }}" title="All airports in {{ airport.country }}/" >{{ airport.country }}</td></tr>
 						<tr><td>IATA code:</td><td>{{ airport.iata_id }}</td></tr>
 						<tr><td>ICAO code:</td><td>{{ airport.icao_id}}</td></tr>
 						{% if airport.distanceTo %}
@@ -197,31 +215,134 @@
 				<h3>Sorry, we could not find any airports matching your query. Message is "{{reason}}"</h3>
 				<p>Please try to search again using the search tab above.
 			{% endif %}
-				
-			{% if bSingleAirport%}
+			
+						{% if bSingleAirport%}
 				{% for airport in airports %}
-				<h2>Photos from flickr taken close to {{ airport.name }}</h2>
-				<div id="airportPhotos"></div>
+				<table><tr><td>
+				<div id="page_gallery">
+					<div id="container_gallery">
+						<div id="header">
+							<h2>Photos from flickr taken close to {{ airport.name }}</h2>
+						</div>
+						<!-- Start Advanced Gallery Html Containers -->
+						<div id="gallery-adv" class="content_gallery">
+							<div id="controls-adv" class="controls"></div>
+							<div id="loading-adv" class="loader"></div>
+							<div id="slideshow-adv" class="slideshow"></div>
+							<!--div id="caption-adv" class="embox"></div-->
+						</div>
+						<div id="thumbs-adv" class="navigation_gallery">
+							<ul class="thumbs noscript" id="images">
+								<!--li>
+									<a class="thumb" href="http://farm4.static.flickr.com/3261/2538183196_8baf9a8015.jpg" title="Title #0">
+										<img src="http://farm4.static.flickr.com/3261/2538183196_8baf9a8015_s.jpg" alt="Title #0" />
+									</a>
+				
+								</li>
+								<li>
+									<a class="thumb" href="http://farm2.static.flickr.com/1260/930424599_e75865c0d6.jpg" title="Title #23">
+										<img src="http://farm2.static.flickr.com/1260/930424599_e75865c0d6_s.jpg" alt="Title #23" />
+									</a>
+								</li-->
+							</ul>
+						</div>
+					</div>
+				</div>
+				</td></tr></table>
 				  <script  type="text/javascript">
 				  $(document).ready(function(){
-				    $.getJSON("http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=fca79ade9d154d976a7f68bca5753fbd&lat={{ airport.point.lat }}&lon={{ airport.point.lon }}&radius=5&min_taken_date=2008-09-01+00:00:00&format=json&jsoncallback=?",
+					  $.getJSON("http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=fca79ade9d154d976a7f68bca5753fbd&lat={{ airport.point.lat }}&lon={{ airport.point.lon }}&radius=4&per_page=500&min_taken_date=1990-01-01+00:00:00&format=json&jsoncallback=?",
 				        function(data){
-				          $.each(data.photos.photo, function(i,photo){
-				            urlImg="http://farm" + photo.farm + ".static.flickr.com/" + photo.server + "/"+ photo.id+"_"+photo.secret+"_m.jpg";
-				            urlHref="http://www.flickr.com/photos/" + photo.owner +"/" + photo.id;
-				            img = $("<img/>").attr("src", urlImg);
-				            a = $("<a/>").attr("href",urlHref);
-							a.append(img);
 				
-				            a.appendTo("#airportPhotos");
-							//$("<a>").attr("href",urlHref).
-				            //if ( i == 3 ) return false;
-				          });
+						  if (data.stat=="fail"){
+						  	//$("<p/>").text("Failed to retrieve photos due to " +data.message).appendTo("#images");
+						  }else {
+						  	//$("<p/>").text("Found " +data.photos.total+ " photos").appendTo("#images");
+				
+				
+				          	$.each(data.photos.photo, function(i,photo){
+								urlSmall="http://farm" + photo.farm + ".static.flickr.com/" + photo.server + "/"+ photo.id+"_"+photo.secret+"_s.jpg";
+								urlBig="http://farm" + photo.farm + ".static.flickr.com/" + photo.server + "/"+ photo.id+"_"+photo.secret+".jpg";
+								urlHref="http://www.flickr.com/photos/" + photo.owner +"/" + photo.id;
+								img = $("<img/>").attr("src", urlSmall);
+								a = $("<a/>").attr("href",urlBig).attr("class","thumb");
+								a.append(img);
+				
+								li = $("<li/>");
+								li.append(a);
+				
+				
+								li.appendTo("#images");
+								//$("<a>").attr("href",urlHref).
+								//if ( i == 3 ) return false;
+							  });
+							//initialize gallery
+				
+							// Initially set opacity on thumbs and add
+							// additional styling for hover effect on thumbs
+							var onMouseOutOpacity = 0.67;
+							$('#thumbs-adv ul.thumbs li').css('opacity', onMouseOutOpacity)
+								.hover(
+									function () {
+										$(this).not('.selected').fadeTo('fast', 1.0);
+									},
+									function () {
+										$(this).not('.selected').fadeTo('fast', onMouseOutOpacity);
+									}
+								);
+				
+							$(document).ready(function() {
+								// Initialize Advanced Galleriffic Gallery
+								var galleryAdv = $('#gallery-adv').galleriffic('#thumbs-adv', {
+									delay:                  2000,
+									numThumbs:              21,
+									preloadAhead:           10,
+									enableTopPager:         true,
+									enableBottomPager:      true,
+									imageContainerSel:      '#slideshow-adv',
+									controlsContainerSel:   '#controls-adv',
+									captionContainerSel:    '#caption-adv',
+									loadingContainerSel:    '#loading-adv',
+									renderSSControls:       true,
+									renderNavControls:      true,
+									playLinkText:           'Play Slideshow',
+									pauseLinkText:          'Pause Slideshow',
+									prevLinkText:           '&lsaquo; Previous Photo',
+									nextLinkText:           'Next Photo &rsaquo;',
+									nextPageLinkText:       'Next &rsaquo;',
+									prevPageLinkText:       '&lsaquo; Prev',
+									enableHistory:          true,
+									autoStart:              false,
+									onChange:               function(prevIndex, nextIndex) {
+										$('#thumbs-adv ul.thumbs').children()
+											.eq(prevIndex).fadeTo('fast', onMouseOutOpacity).end()
+											.eq(nextIndex).fadeTo('fast', 1.0);
+									},
+									onTransitionOut:        function(callback) {
+										$('#slideshow-adv, #caption-adv').fadeOut('fast', callback);
+									},
+									onTransitionIn:         function() {
+										$('#slideshow-adv, #caption-adv').fadeIn('fast');
+									},
+									onPageTransitionOut:    function(callback) {
+										$('#thumbs-adv ul.thumbs').fadeOut('fast', callback);
+									},
+									onPageTransitionIn:     function() {
+										$('#thumbs-adv ul.thumbs').fadeIn('fast');
+									}
+								});
+				
+							});
+						  }
 				        });
 				  });
-  				</script>
+				  </script>
+
+
   				{% endfor %}
 			{% endif %}
+			<p>&nbsp;</p>
+
 		</div>
 		<div class="content tab2">
 			<h1>Search the airports of the world</h1>
